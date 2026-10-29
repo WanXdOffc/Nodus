@@ -3,6 +3,7 @@ import LandingPage from '@/views/LandingPage.vue';
 import Dashboard from '@/views/Dashboard.vue';
 import MyReports from '@/views/MyReports.vue';
 import Messages from '@/views/Messages.vue';
+import DeveloperPortal from '@/views/DeveloperPortal.vue';
 
 const routes = [
     {
@@ -26,6 +27,12 @@ const routes = [
         path: '/messages',
         name: 'messages',
         component: Messages,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/developer',
+        name: 'developer',
+        component: DeveloperPortal,
         meta: { requiresAuth: true },
     },
 ];
