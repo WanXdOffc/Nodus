@@ -99,6 +99,62 @@
         </div>
       </div>
 
+      <!-- QR Handshake Section (Verifikasi Serah Terima) -->
+      <!-- Jika User adalah Pelapor: Tampilkan QR Code -->
+      <div
+        v-if="ticket?.status === 'open' && (isReporter || (!isReporter && !isFinder))"
+        class="bg-gradient-to-b from-teal-50/60 to-white rounded-2xl p-4 border border-teal-100 shadow-sm text-center space-y-3"
+      >
+        <div class="flex items-center justify-between text-xs font-bold text-navy-900 border-b border-teal-100/70 pb-2">
+          <span class="flex items-center gap-1.5 text-brand-teal">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+            </svg>
+            QR Handshake Pelapor
+          </span>
+          <span class="text-[10px] bg-brand-teal/15 text-brand-teal px-2 py-0.5 rounded-full font-bold">
+            Tunjukkan ke Penemu
+          </span>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 inline-block shadow-sm">
+          <qrcode-vue
+            :value="ticket?.qr_token || 'nodus-pending-token'"
+            :size="150"
+            level="H"
+            render-as="svg"
+            class="mx-auto"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-xs font-bold text-navy-900">
+            Tunjukkan QR ini kepada penemu saat bertemu
+          </p>
+          <p class="text-[11px] text-text-secondary leading-relaxed max-w-xs mx-auto">
+            Penemu akan memindai kode QR ini untuk memverifikasi serah terima secara aman dan menaikkan reputasi Trust Score.
+          </p>
+        </div>
+      </div>
+
+      <!-- Jika Tiket Berhasil Diverifikasi: Tampilkan Banner Sukses Handshake -->
+      <div
+        v-if="ticket?.status === 'verified'"
+        class="bg-emerald-50 border border-emerald-200/70 rounded-2xl p-4 text-center space-y-2 shadow-sm"
+      >
+        <div class="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center mx-auto">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <p class="text-xs font-bold text-emerald-900">
+          Serah Terima Berhasil Diverifikasi!
+        </p>
+        <p class="text-[11px] text-emerald-700 leading-relaxed max-w-xs mx-auto">
+          Barang telah resmi diselesaikan. Poin Trust Score +0.5 telah ditambahkan ke profil Anda.
+        </p>
+      </div>
+
       <!-- Chat Thread Sederhana -->
       <div class="space-y-3 pt-2 border-t border-slate-100">
         <div class="flex items-center justify-between text-xs font-bold text-navy-900">
@@ -170,6 +226,20 @@
 
     <!-- Action Area (Bawah) -->
     <div class="p-5 border-t border-slate-200/80 bg-slate-50/50 space-y-2.5 flex-shrink-0">
+      <!-- Jika User adalah Penemu (Finder): Tombol Pindai QR Pelapor Utama -->
+      <button
+        v-if="ticket?.status === 'open' && (isFinder || (!isReporter && !isFinder))"
+        @click="scannerModalOpen = true"
+        :disabled="actionLoading"
+        class="w-full py-3 px-4 bg-brand-teal hover:bg-[#00ad95] disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+        </svg>
+        <span>Pindai QR Pelapor</span>
+      </button>
+
+      <!-- Tombol Verifikasi Ownership Manual (Sebagai Pelengkap / Alternatif) -->
       <button
         @click="handleVerifyOwnership"
         :disabled="actionLoading || ticket?.status === 'verified'"
@@ -190,6 +260,12 @@
       </button>
     </div>
 
+    <!-- Modal Pindai QR Code (HTML5 Scanner) -->
+    <QrScannerModal
+      v-model="scannerModalOpen"
+      @scanned="handleQrScanned"
+    />
+
     <!-- Modal Report User / Fraud (Anti-ID-Hafal) -->
     <ReportUserModal
       v-model="reportModalOpen"
@@ -206,6 +282,8 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useAppStore } from '@/store/appStore';
+import QrcodeVue from 'qrcode.vue';
+import QrScannerModal from '@/components/QrScannerModal.vue';
 import ReportUserModal from '@/components/ReportUserModal.vue';
 import ReviewModal from '@/components/ReviewModal.vue';
 
@@ -224,20 +302,37 @@ const sending = ref(false);
 const actionLoading = ref(false);
 const reportModalOpen = ref(false);
 const showReviewModal = ref(false);
+const scannerModalOpen = ref(false);
 
 const currentUserId = computed(() => store.user?.id);
 const messages = computed(() => store.ticketMessages);
 const messagesLoading = computed(() => store.messagesLoading);
+
+// Identifikasi peran pengguna pada tiket ini:
+// Pelapor (Loser): pemilik barang yang hilang
+const isReporter = computed(() => {
+  if (!props.ticket || !currentUserId.value) return false;
+  const lostUser = props.ticket.lost_item?.user_id ?? props.ticket.lostItem?.user_id;
+  return Number(lostUser) === Number(currentUserId.value);
+});
+
+// Penemu (Finder): pemilik barang temuan
+const isFinder = computed(() => {
+  if (!props.ticket || !currentUserId.value) return false;
+  const foundUser = props.ticket.found_item?.user_id ?? props.ticket.foundItem?.user_id;
+  return Number(foundUser) === Number(currentUserId.value);
+});
 
 // Otomatis tentukan pihak lawan bicara (counterpart)
 const counterpartUser = computed(() => {
   if (!props.ticket) return null;
   if (props.ticket.counterpart_user) return props.ticket.counterpart_user;
   const currentId = store.user?.id;
-  if (props.ticket.lost_item?.user_id === currentId) {
-    return props.ticket.found_item?.user;
+  const lostUser = props.ticket.lost_item?.user_id ?? props.ticket.lostItem?.user_id;
+  if (lostUser === currentId) {
+    return props.ticket.found_item?.user ?? props.ticket.foundItem?.user;
   }
-  return props.ticket.lost_item?.user;
+  return props.ticket.lost_item?.user ?? props.ticket.lostItem?.user;
 });
 
 async function handleSendMessage() {
@@ -250,6 +345,25 @@ async function handleSendMessage() {
     // error handled in store
   } finally {
     sending.value = false;
+  }
+}
+
+async function handleQrScanned(token) {
+  if (!token || actionLoading.value || !props.ticket) return;
+  actionLoading.value = true;
+  try {
+    await store.verifyQrClaimTicket(props.ticket.id, token);
+
+    // Pemicu acak setelah sukses untuk memunculkan modal ulasan
+    if (Math.random() > 0.5) {
+      setTimeout(() => {
+        showReviewModal.value = true;
+      }, 700);
+    }
+  } catch (err) {
+    // error handled in store
+  } finally {
+    actionLoading.value = false;
   }
 }
 

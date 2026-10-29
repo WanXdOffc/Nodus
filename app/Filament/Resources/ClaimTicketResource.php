@@ -106,6 +106,11 @@ class ClaimTicketResource extends Resource
                     ])
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
+                Tables\Columns\TextColumn::make('qr_token')
+                    ->label('QR Token')
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
                     ->dateTime('d M Y H:i')
@@ -134,7 +139,10 @@ class ClaimTicketResource extends Resource
                     ->visible(fn (ClaimTicket $record): bool => $record->admin_status === 'pending')
                     ->requiresConfirmation()
                     ->action(function (ClaimTicket $record): void {
-                        $record->update(['admin_status' => 'approved']);
+                        $record->update([
+                            'admin_status' => 'approved',
+                            'qr_token' => $record->qr_token ?: (string) \Illuminate\Support\Str::uuid(),
+                        ]);
                     }),
                 Tables\Actions\Action::make('reject')
                     ->label('Reject')

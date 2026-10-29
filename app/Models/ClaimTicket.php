@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class ClaimTicket extends Model
 {
@@ -17,7 +18,17 @@ class ClaimTicket extends Model
         'ai_match_score',
         'status',
         'admin_status',
+        'qr_token',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (ClaimTicket $ticket) {
+            if ($ticket->admin_status === 'approved' && empty($ticket->qr_token)) {
+                $ticket->qr_token = (string) Str::uuid();
+            }
+        });
+    }
 
     protected function casts(): array
     {
