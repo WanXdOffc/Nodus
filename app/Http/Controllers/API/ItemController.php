@@ -3,14 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Mail\ItemMatchFoundMail;
-use App\Models\ClaimTicket;
+use App\Jobs\ProcessAiMatchmaking;
 use App\Models\Item;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class ItemController extends Controller
 {
@@ -95,31 +91,27 @@ class ItemController extends Controller
     }
 
     /**
-     * Menambahkan noise acak (+/- 0.002 derajat atau sekitar 150-250m) untuk menyamarkan koordinat asli publik.
+     * Menambahkan Smart Directional Noise (maksimal 500m / ~0.0045 derajat) untuk menyamarkan koordinat publik.
      */
     private function obfuscateCoordinates(Item $item): Item
     {
         if ($item->latitude !== null && $item->longitude !== null) {
-            // Generate noise acak antara -0.00200 dan +0.00200 derajat
-            $latNoise = mt_rand(-200, 200) / 100000;
-            $lngNoise = mt_rand(-200, 200) / 100000;
-
-            if (abs($latNoise) < 0.0005) {
-                $latNoise = 0.0015;
-            }
-            if (abs($lngNoise) < 0.0005) {
-                $lngNoise = -0.0015;
+            $max_noise = 0.0045; // ~500 meter
+            $x = (mt_rand(-100, 100) / 100) * $max_noise; // Acak Barat-Timur
+            $y = (mt_rand(10, 100) / 100) * $max_noise; // Hanya positif (Selatan / daratan)
+            if (abs($x) < 0.0005) {
+                $x = 0.0015;
             }
 
-            $item->latitude = round((float) $item->latitude + $latNoise, 6);
-            $item->longitude = round((float) $item->longitude + $lngNoise, 6);
+            $item->latitude = round((float) $item->latitude - $y, 6); // Geser ke Selatan (daratan)
+            $item->longitude = round((float) $item->longitude + $x, 6);
         }
 
         return $item;
     }
 
     /**
-     * Menyimpan laporan barang baru (lost / found), ekstraksi AI tags dengan Gemini, dan matchmaking otomatis.
+     * Menyimpan laporan barang baru (lost / found) dan mendelegasikan AI Vision ke Background Job.
      */
     public function store(Request $request): JsonResponse
     {
@@ -149,10 +141,7 @@ class ItemController extends Controller
             $imagePath = $request->file('image')->store('items', 'public');
         }
 
-        // Ekstraksi kata kunci dengan Gemini AI
-        $aiTags = $this->extractAiTags($validated['title'], $validated['description']);
-
-        // Simpan data item ke database
+        // Simpan data item ke database secara instan
         $item = Item::create([
             'user_id' => $request->user()->id,
             'type' => $validated['type'],
@@ -165,16 +154,21 @@ class ItemController extends Controller
             'item_date' => $validated['item_date'],
             'status' => 'searching',
             'image_path' => $imagePath,
-            'ai_tags' => $aiTags,
+            'ai_tags' => null,
         ]);
 
-        // Jalankan pencocokan otomatis (Matchmaking)
-        $createdTickets = $this->runMatchmaking($item);
+        // Delegasikan pembacaan Gemini AI Vision dan Matchmaking ke Background Job
+        ProcessAiMatchmaking::dispatch($item);
+        $item->refresh();
+
+        $matchedTicketsCount = \App\Models\ClaimTicket::where('lost_item_id', $item->id)
+            ->orWhere('found_item_id', $item->id)
+            ->count();
 
         return response()->json([
-            'message' => 'Laporan barang berhasil disimpan.',
+            'message' => 'Laporan berhasil dibuat.',
             'item' => $item->load('user:id,name,trust_score'),
-            'matched_tickets_count' => count($createdTickets),
+            'matched_tickets_count' => $matchedTicketsCount,
         ], 201);
     }
 
@@ -206,177 +200,5 @@ class ItemController extends Controller
             });
 
         return response()->json($items);
-    }
-
-    /**
-     * Memanggil REST API Gemini untuk mengekstrak kata kunci utama menjadi JSON array.
-     */
-    private function extractAiTags(string $title, string $description): array
-    {
-        $apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY');
-
-        if (empty($apiKey)) {
-            Log::warning('GEMINI_API_KEY tidak dikonfigurasi. Menggunakan ekstraksi fallback.');
-            return $this->fallbackTagExtraction($title, $description);
-        }
-
-        $prompt = "Ekstrak kata kunci utama dari judul dan deskripsi barang ini dalam format JSON array (contoh: ['dompet', 'kulit', 'hitam', 'fossil']). Hanya berikan output JSON array tanpa penjelasan lainnya. Judul: {$title}, Deskripsi: {$description}";
-
-        // Coba model yang diminta (gemini-1.5-flash), lalu fallback ke model flash aktif (gemini-3.5-flash)
-        $models = ['gemini-1.5-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
-
-        foreach ($models as $model) {
-            try {
-                $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-
-                $response = Http::timeout(10)->post($endpoint, [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt],
-                            ],
-                        ],
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.2,
-                    ],
-                ]);
-
-                if ($response->successful()) {
-                    $rawText = $response->json('candidates.0.content.parts.0.text');
-
-                    if ($rawText) {
-                        // Bersihkan pembungkus markdown ```json ... ``` jika ada
-                        $cleanJson = preg_replace('/```(?:json)?\s*(.*?)\s*```/s', '$1', trim($rawText));
-                        $decoded = json_decode($cleanJson, true);
-
-                        if (is_array($decoded)) {
-                            $tags = array_values(array_unique(array_filter(array_map('strtolower', array_map('trim', $decoded)))));
-                            if (! empty($tags)) {
-                                return $tags;
-                            }
-                        }
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning("Gemini model {$model} request exception: " . $e->getMessage());
-            }
-        }
-
-        return $this->fallbackTagExtraction($title, $description);
-    }
-
-    /**
-     * Ekstraksi kata kunci sederhana jika panggilan API mengalami kendala.
-     */
-    private function fallbackTagExtraction(string $title, string $description): array
-    {
-        $text = strtolower($title . ' ' . $description);
-        $text = preg_replace('/[^a-z0-9\s]/', ' ', $text);
-        $words = preg_split('/\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
-
-        $stopWords = ['dan', 'di', 'ke', 'dari', 'yang', 'pada', 'untuk', 'dengan', 'ada', 'ini', 'itu', 'adalah', 'saya', 'bisa'];
-        $filtered = array_filter($words, fn ($w) => strlen($w) >= 3 && ! in_array($w, $stopWords, true));
-
-        return array_values(array_unique($filtered));
-    }
-
-    /**
-     * Mencari item dengan tipe berlawanan yang statusnya 'searching'.
-     * Menghitung kecocokan ai_tags. Jika >= 60%, buat record di claim_tickets.
-     */
-    private function runMatchmaking(Item $newItem): array
-    {
-        $newTags = $newItem->ai_tags ?? [];
-        if (empty($newTags)) {
-            return [];
-        }
-
-        // Tipe berlawanan: lost <-> found
-        $oppositeType = $newItem->type === 'lost' ? 'found' : 'lost';
-
-        $candidates = Item::where('type', $oppositeType)
-            ->where('status', 'searching')
-            ->where('id', '!=', $newItem->id)
-            ->whereNotNull('ai_tags')
-            ->get();
-
-        $createdTickets = [];
-
-        foreach ($candidates as $candidate) {
-            $candidateTags = $candidate->ai_tags ?? [];
-            if (empty($candidateTags)) {
-                continue;
-            }
-
-            // Normalisasi tag ke huruf kecil
-            $normNewTags = array_map('strtolower', $newTags);
-            $normCandidateTags = array_map('strtolower', $candidateTags);
-
-            // Irisan kata kunci
-            $intersection = array_intersect($normNewTags, $normCandidateTags);
-            $intersectionCount = count($intersection);
-
-            if ($intersectionCount === 0) {
-                continue;
-            }
-
-            // Hitung persentase kecocokan
-            $unionCount = count(array_unique(array_merge($normNewTags, $normCandidateTags)));
-            $score = $unionCount > 0 ? (int) round(($intersectionCount / $unionCount) * 100) : 0;
-
-            // Jika kecocokan mencapai ambang batas 60%
-            if ($score >= 60) {
-                $lostItemId = $newItem->type === 'lost' ? $newItem->id : $candidate->id;
-                $foundItemId = $newItem->type === 'found' ? $newItem->id : $candidate->id;
-
-                $ticket = ClaimTicket::firstOrCreate(
-                    [
-                        'lost_item_id' => $lostItemId,
-                        'found_item_id' => $foundItemId,
-                    ],
-                    [
-                        'ai_match_score' => $score,
-                        'status' => 'open',
-                        'admin_status' => 'pending',
-                    ]
-                );
-
-                if ($ticket->wasRecentlyCreated) {
-                    $this->sendMatchNotifications($ticket);
-                }
-
-                $createdTickets[] = $ticket;
-            }
-        }
-
-        return $createdTickets;
-    }
-
-    /**
-     * Mengirim notifikasi email kepada pencari (seeker) dan penemu (finder) saat barang terdeteksi cocok.
-     */
-    private function sendMatchNotifications(ClaimTicket $ticket): void
-    {
-        try {
-            $ticket->load(['lostItem.user', 'foundItem.user']);
-
-            $seeker = $ticket->lostItem?->user;
-            $finder = $ticket->foundItem?->user;
-
-            if ($seeker && ! empty($seeker->email)) {
-                Mail::to($seeker->email)->send(
-                    new ItemMatchFoundMail($seeker, $ticket, 'seeker')
-                );
-            }
-
-            if ($finder && ! empty($finder->email)) {
-                Mail::to($finder->email)->send(
-                    new ItemMatchFoundMail($finder, $ticket, 'finder')
-                );
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Gagal mengirimkan email notifikasi kecocokan barang: ' . $e->getMessage());
-        }
     }
 }

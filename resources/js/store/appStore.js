@@ -16,6 +16,8 @@ export const useAppStore = defineStore('app', {
     token: savedToken,
     items: [],
     itemsLoading: false,
+    myReports: [],
+    myReportsLoading: false,
     activeItem: null,
     activeTicket: null,
     tickets: [],
@@ -162,6 +164,34 @@ export const useAppStore = defineStore('app', {
         return [];
       } finally {
         this.itemsLoading = false;
+      }
+    },
+
+    /**
+     * Mengambil laporan milik user dengan teknik Stale-While-Revalidate.
+     * Segera gunakan cache array di memori jika ada, fetch asinkron di belakang layar.
+     */
+    async fetchMyReports(silent = false) {
+      if (!this.myReports.length && !silent) {
+        this.myReportsLoading = true;
+      }
+
+      try {
+        const res = await axios.get('/api/items', {
+          params: {
+            user_id: this.user?.id,
+            include_expired: true,
+            per_page: 50,
+          },
+        });
+        const data = res.data.data || res.data || [];
+        this.myReports = Array.isArray(data) ? data : [];
+        return this.myReports;
+      } catch (err) {
+        console.error('Failed to fetch my reports:', err);
+        return this.myReports;
+      } finally {
+        this.myReportsLoading = false;
       }
     },
 
@@ -322,8 +352,20 @@ export const useAppStore = defineStore('app', {
             'Content-Type': 'multipart/form-data',
           },
         });
-        this.notify('Laporan barang berhasil dibuat & diproses oleh AI Nodus!', 'success');
-        await this.fetchItems();
+        const createdItem = res.data.item;
+        if (createdItem) {
+          // Update memori secara instan untuk respon super cepat
+          this.items.unshift(createdItem);
+          this.myReports.unshift(createdItem);
+          this.calculateStats();
+        }
+
+        this.notify('Laporan berhasil dibuat! AI Vision sedang memproses pencocokan di latar belakang.', 'success');
+        
+        // Sinkronisasi asinkron di background
+        this.fetchItems();
+        this.fetchMyReports(true);
+
         return res.data;
       } catch (err) {
         const msg = err.response?.data?.message || 'Gagal membuat laporan barang.';

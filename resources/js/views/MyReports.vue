@@ -66,9 +66,9 @@
         </div>
       </div>
 
-      <!-- Feed / List Laporan Pribadi -->
+      <!-- Feed / List Laporan Pribadi (Stale-While-Revalidate) -->
       <div class="flex-1 overflow-y-auto space-y-4 pr-1">
-        <div v-if="loading" class="text-center py-16 text-xs text-slate-400">
+        <div v-if="store.myReportsLoading && !store.myReports.length" class="text-center py-16 text-xs text-slate-400">
           Mengambil data laporan Anda...
         </div>
 
@@ -201,25 +201,21 @@ import CreateReportModal from '@/components/CreateReportModal.vue';
 import ReportUserModal from '@/components/ReportUserModal.vue';
 
 const store = useAppStore();
-const loading = ref(false);
 const activeFilter = ref('all');
 const showReportModal = ref(false);
 const reportModalOpen = ref(false);
 const selectedTargetUser = ref(null);
 
 onMounted(async () => {
-  loading.value = true;
   if (!store.user) {
     await store.fetchCurrentUser();
   }
-  await store.fetchItems({ user_id: store.user?.id, include_expired: true });
-  loading.value = false;
+  // Stale-While-Revalidate: Segera render data di memori Pinia, fetch di background
+  store.fetchMyReports(store.myReports.length > 0);
 });
 
 const myItems = computed(() => {
-  const currentUserId = store.user?.id;
-  if (!currentUserId) return store.items;
-  return store.items.filter((item) => item.user_id === currentUserId);
+  return store.myReports;
 });
 
 const filteredMyItems = computed(() => {
@@ -235,6 +231,6 @@ function formatDate(dateStr) {
 }
 
 function handleItemCreated() {
-  store.fetchItems({ user_id: store.user?.id, include_expired: true });
+  store.fetchMyReports(true);
 }
 </script>

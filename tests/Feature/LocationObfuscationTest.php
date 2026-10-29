@@ -44,12 +44,12 @@ class LocationObfuscationTest extends TestCase
         $this->assertNotEquals($exactLat, $returnedLat, 'Latitude publik tidak boleh sama persis dengan database asli.');
         $this->assertNotEquals($exactLng, $returnedLng, 'Longitude publik tidak boleh sama persis dengan database asli.');
 
-        // Jarak perbedaan noise harus berada di rentang wajar (+/- 0.003 derajat)
+        // Jarak perbedaan noise harus berada di rentang 500 meter (maksimal 0.0045 derajat)
         $diffLat = abs($returnedLat - $exactLat);
         $diffLng = abs($returnedLng - $exactLng);
 
-        $this->assertLessThanOrEqual(0.003, $diffLat, 'Perbedaan latitude harus dalam rentang noise yang ditentukan.');
-        $this->assertLessThanOrEqual(0.003, $diffLng, 'Perbedaan longitude harus dalam rentang noise yang ditentukan.');
+        $this->assertLessThanOrEqual(0.0045, $diffLat, 'Perbedaan latitude harus dalam rentang noise 500m (maks 0.0045).');
+        $this->assertLessThanOrEqual(0.0045, $diffLng, 'Perbedaan longitude harus dalam rentang noise 500m (maks 0.0045).');
 
         // Pastikan nilai di database tetap asli dan tidak berubah
         $freshItem = $item->fresh();
