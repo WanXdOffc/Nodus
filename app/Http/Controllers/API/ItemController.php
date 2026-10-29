@@ -24,9 +24,17 @@ class ItemController extends Controller
             $query->where('type', $request->query('type'));
         }
 
-        // Filter status ('searching', 'matched', 'resolved')
+        // Filter status ('searching', 'matched', 'resolved', 'expired_charity')
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
+        } elseif (! $request->filled('user_id') && ! $request->boolean('include_expired')) {
+            // Pastikan memfilter keluar barang berstatus 'expired_charity' agar hilang dari peta dan feed publik
+            $query->where('status', '!=', 'expired_charity');
+        }
+
+        // Filter berdasarkan user_id (misal untuk halaman Laporanku)
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
         }
 
         // Filter kategori

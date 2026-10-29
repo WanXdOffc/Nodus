@@ -69,6 +69,7 @@ class ItemResource extends Resource
                         'searching' => 'Searching',
                         'matched' => 'Matched',
                         'resolved' => 'Resolved',
+                        'expired_charity' => 'Expired Charity (Program Donasi)',
                     ])
                     ->default('searching')
                     ->required(),
@@ -101,7 +102,12 @@ class ItemResource extends Resource
                         'warning' => 'searching',
                         'info' => 'matched',
                         'success' => 'resolved',
+                        'gray' => 'expired_charity',
                     ])
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'expired_charity' => 'Expired Charity',
+                        default => ucfirst($state ?? ''),
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('location_name')
                     ->label('Lokasi')
@@ -122,10 +128,12 @@ class ItemResource extends Resource
                         'found' => 'Found',
                     ]),
                 Tables\Filters\SelectFilter::make('status')
+                    ->label('Status Laporan')
                     ->options([
                         'searching' => 'Searching',
                         'matched' => 'Matched',
                         'resolved' => 'Resolved',
+                        'expired_charity' => 'Expired Charity (Program Donasi)',
                     ]),
             ])
             ->actions([
