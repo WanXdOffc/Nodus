@@ -37,10 +37,11 @@ class ReviewController extends Controller
      */
     public function indexFeatured(): JsonResponse
     {
+        // Hanya menampilkan ulasan bintang 4 dan 5 yang di-feature admin untuk landing page publik
         $reviews = AppReview::with('user:id,name,trust_score')
             ->where('is_featured', true)
+            ->whereIn('rating', [4, 5])
             ->latest()
-            ->take(10)
             ->get();
 
         return response()->json($reviews);

@@ -6,7 +6,9 @@ use App\Models\ClaimTicket;
 use App\Models\Item;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ItemAndAiMatchingTest extends TestCase
@@ -90,8 +92,10 @@ class ItemAndAiMatchingTest extends TestCase
             ], 200),
         ]);
 
+        Storage::fake('public');
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->postJson('/api/items', [
+            ->post('/api/items', [
                 'title' => 'Dompet Pria Fossil Kulit Hitam',
                 'description' => 'Tertinggal di meja perpustakaan lantai 2',
                 'type' => 'lost',
@@ -100,6 +104,7 @@ class ItemAndAiMatchingTest extends TestCase
                 'lng' => 106.8456,
                 'location_name' => 'Perpustakaan',
                 'item_date' => '2026-10-29',
+                'image' => UploadedFile::fake()->image('dompet.jpg'),
             ]);
 
         $response->assertStatus(201)
@@ -162,9 +167,11 @@ class ItemAndAiMatchingTest extends TestCase
             ], 200),
         ]);
 
+        Storage::fake('public');
+
         // Item 2: Found item uploaded by penemu
         $response = $this->withHeader('Authorization', 'Bearer ' . $foundToken)
-            ->postJson('/api/items', [
+            ->post('/api/items', [
                 'title' => 'Ditemukan Dompet Kulit Warna Hitam',
                 'description' => 'Ditemukan di bangku koridor',
                 'type' => 'found',
@@ -173,6 +180,7 @@ class ItemAndAiMatchingTest extends TestCase
                 'lng' => 106.8457,
                 'location_name' => 'Koridor Gedung A',
                 'item_date' => '2026-10-29',
+                'image' => UploadedFile::fake()->image('found_dompet.jpg'),
             ]);
 
         $response->assertStatus(201)

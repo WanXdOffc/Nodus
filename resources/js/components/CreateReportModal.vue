@@ -154,15 +154,16 @@
           </div>
         </div>
 
-        <!-- Unggah Foto Barang -->
+        <!-- Unggah Foto Barang (Wajib) -->
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">
-            Foto Barang (Opsional, JPG/PNG maks 5MB)
+            Foto Bukti Barang <span class="text-rose-500">* (Wajib diunggah)</span>
           </label>
           <div class="flex items-center gap-3">
             <input
               type="file"
               accept="image/*"
+              required
               @change="handleImageChange"
               class="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-mint-wash file:text-brand-teal hover:file:bg-[#00ab94]/20 cursor-pointer"
             />
@@ -170,6 +171,9 @@
               <img :src="imagePreview" class="w-full h-full object-cover" />
             </div>
           </div>
+          <p class="text-[10px] text-text-secondary mt-1">
+            Sertakan foto asli barang hilang atau barang temuan Anda (JPG/PNG maks 5MB).
+          </p>
         </div>
 
         <!-- Action Buttons -->
@@ -340,6 +344,11 @@ function handleImageChange(e) {
 }
 
 async function handleSubmit() {
+  if (!imageFile.value) {
+    store.notify('Foto bukti fisik barang wajib diunggah!', 'error');
+    return;
+  }
+
   submitting.value = true;
   try {
     const formData = new FormData();

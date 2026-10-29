@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen w-screen overflow-hidden flex flex-col lg:flex-row bg-slate-50 text-text-primary font-sans">
     <!-- Sidebar Kiri -->
-    <Sidebar @open-report="reportModalOpen = true" />
+    <Sidebar />
 
     <!-- Area Utama Konten Laporanku -->
     <main class="flex-1 flex flex-col h-full overflow-hidden p-6 sm:p-8 space-y-6">

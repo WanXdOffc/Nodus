@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ItemMatchFoundMail;
 use App\Models\ClaimTicket;
 use App\Models\Item;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ItemController extends Controller
 {
@@ -138,7 +140,7 @@ class ItemController extends Controller
             'longitude' => ['required', 'numeric'],
             'location_name' => ['required', 'string', 'max:255'],
             'item_date' => ['required', 'date'],
-            'image' => ['nullable', 'image', 'max:5120'], // maks 5MB
+            'image' => ['required', 'image', 'max:5120'], // maks 5MB foto wajib diunggah
         ]);
 
         // Simpan gambar ke storage publik jika ada
@@ -340,10 +342,41 @@ class ItemController extends Controller
                     ]
                 );
 
+                if ($ticket->wasRecentlyCreated) {
+                    $this->sendMatchNotifications($ticket);
+                }
+
                 $createdTickets[] = $ticket;
             }
         }
 
         return $createdTickets;
+    }
+
+    /**
+     * Mengirim notifikasi email kepada pencari (seeker) dan penemu (finder) saat barang terdeteksi cocok.
+     */
+    private function sendMatchNotifications(ClaimTicket $ticket): void
+    {
+        try {
+            $ticket->load(['lostItem.user', 'foundItem.user']);
+
+            $seeker = $ticket->lostItem?->user;
+            $finder = $ticket->foundItem?->user;
+
+            if ($seeker && ! empty($seeker->email)) {
+                Mail::to($seeker->email)->send(
+                    new ItemMatchFoundMail($seeker, $ticket, 'seeker')
+                );
+            }
+
+            if ($finder && ! empty($finder->email)) {
+                Mail::to($finder->email)->send(
+                    new ItemMatchFoundMail($finder, $ticket, 'finder')
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Gagal mengirimkan email notifikasi kecocokan barang: ' . $e->getMessage());
+        }
     }
 }

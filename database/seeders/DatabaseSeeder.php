@@ -170,5 +170,121 @@ class DatabaseSeeder extends Seeder
                 'ai_tags' => ['tas', 'ransel', 'eiger', 'abu-abu'],
             ]
         );
+
+        // 6. Resolved Items (Riwayat Sukses dengan Foto Asli)
+        \App\Models\Item::updateOrCreate(
+            ['title' => 'Dompet Lipat Kulit Fossil Original'],
+            [
+                'user_id' => $admin->id,
+                'type' => 'lost',
+                'description' => 'Dompet kulit cokelat tua dengan kartu identitas berhasil dikembalikan kepada pemilik.',
+                'category' => 'Dompet & Tas',
+                'latitude' => -8.1120,
+                'longitude' => 115.0880,
+                'location_name' => 'Taman Kota Singaraja',
+                'item_date' => now()->subDays(5)->format('Y-m-d'),
+                'status' => 'resolved',
+                'image_path' => 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80',
+                'ai_tags' => ['dompet', 'kulit', 'fossil'],
+            ]
+        );
+
+        \App\Models\Item::updateOrCreate(
+            ['title' => 'Kunci Motor Honda Vario 160 Smartkey'],
+            [
+                'user_id' => $finder->id,
+                'type' => 'found',
+                'description' => 'Kunci motor ditemukan di area Pantai Penimbangan dan telah diserahterimakan melalui verifikasi QR.',
+                'category' => 'Kunci & Kendaraan',
+                'latitude' => -8.1065,
+                'longitude' => 115.0682,
+                'location_name' => 'Pantai Penimbangan',
+                'item_date' => now()->subDays(4)->format('Y-m-d'),
+                'status' => 'resolved',
+                'image_path' => 'https://images.unsplash.com/photo-1589134763158-7c8a6fcf7c61?auto=format&fit=crop&w=600&q=80',
+                'ai_tags' => ['kunci', 'vario', 'smartkey'],
+            ]
+        );
+
+        \App\Models\Item::updateOrCreate(
+            ['title' => 'Smartphone Samsung Galaxy A54 5G'],
+            [
+                'user_id' => $admin->id,
+                'type' => 'lost',
+                'description' => 'Smartphone warna putih casing bening tertinggal di lab komputer dan berhasil dikembalikan.',
+                'category' => 'Elektronik & Gadget',
+                'latitude' => -8.1150,
+                'longitude' => 115.0910,
+                'location_name' => 'Perpustakaan Daerah Singaraja',
+                'item_date' => now()->subDays(3)->format('Y-m-d'),
+                'status' => 'resolved',
+                'image_path' => 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80',
+                'ai_tags' => ['smartphone', 'samsung', 'galaxy'],
+            ]
+        );
+
+        \App\Models\Item::updateOrCreate(
+            ['title' => 'Tas Ransel Laptop Eiger Black Series'],
+            [
+                'user_id' => $finder->id,
+                'type' => 'found',
+                'description' => 'Tas laptop berisi berkas kuliah berhasil diserahkan ke pemiliknya.',
+                'category' => 'Dompet & Tas',
+                'latitude' => -8.1170,
+                'longitude' => 115.0890,
+                'location_name' => 'Gedung Kuliah Bersama',
+                'item_date' => now()->subDays(2)->format('Y-m-d'),
+                'status' => 'resolved',
+                'image_path' => 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80',
+                'ai_tags' => ['tas', 'ransel', 'eiger'],
+            ]
+        );
+
+        // 7. Seed Featured Reviews (Hanya bintang 4 dan 5 yang di-featured)
+        \App\Models\AppReview::updateOrCreate(
+            ['comment' => 'Dompet saya yang jatuh di Pantai Penimbangan kembali hanya dalam waktu 3 jam berkat pencocokan AI Nodus. Luar biasa aman dan terpercaya!'],
+            [
+                'user_id' => $admin->id,
+                'rating' => 5,
+                'is_featured' => true,
+            ]
+        );
+
+        \App\Models\AppReview::updateOrCreate(
+            ['comment' => 'Fitur chat terenkripsi dan verifikasi kepemilikan sangat membantu. Saya tidak perlu khawatir nomor pribadi tersebar saat mengembalikan tas.'],
+            [
+                'user_id' => $finder->id,
+                'rating' => 5,
+                'is_featured' => true,
+            ]
+        );
+
+        \App\Models\AppReview::updateOrCreate(
+            ['comment' => 'Sistem reputasi dinamis membuat orang terdorong untuk jujur. Senang sekali kunci motor saya bisa ketemu dengan cepat!'],
+            [
+                'user_id' => $admin->id,
+                'rating' => 4,
+                'is_featured' => true,
+            ]
+        );
+
+        \App\Models\AppReview::updateOrCreate(
+            ['comment' => 'Antarmuka aplikasi sangat ramah pengguna dan verifikasi QR kodenya canggih banget.'],
+            [
+                'user_id' => $finder->id,
+                'rating' => 5,
+                'is_featured' => true,
+            ]
+        );
+
+        // Ulasan rating rendah (bintang 2) sebagai masukan internal admin (TIDAK BOLEH tampil di landing page)
+        \App\Models\AppReview::updateOrCreate(
+            ['comment' => 'Kadang notifikasinya agak lambat masuk, mohon ditingkatkan kecepatan server ke depannya.'],
+            [
+                'user_id' => $finder->id,
+                'rating' => 2,
+                'is_featured' => false,
+            ]
+        );
     }
 }

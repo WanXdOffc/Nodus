@@ -236,98 +236,144 @@
         </div>
 
         <!-- Horizontal Grid Kartu Barang -->
-        <div v-else-if="historyItems.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="item in historyItems"
-            :key="item.id"
-            class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
-          >
-            <div>
-              <!-- Gambar Barang atau Fallback Visual -->
-              <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center">
-                <img
-                  v-if="item.image_path"
-                  :src="'/storage/' + item.image_path"
-                  :alt="item.title"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div v-else class="text-center p-4">
-                  <div class="w-12 h-12 rounded-2xl bg-mint-wash text-brand-teal mx-auto flex items-center justify-center mb-2">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        <div v-else-if="historyItems.length">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div
+              v-for="item in displayedHistoryItems"
+              :key="item.id"
+              class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
+            >
+              <div>
+                <!-- Gambar Foto Barang Asli -->
+                <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center">
+                  <img
+                    v-if="item.image_path"
+                    :src="item.image_path.startsWith('http') ? item.image_path : '/storage/' + item.image_path"
+                    :alt="item.title"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <img
+                    v-else
+                    src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80"
+                    :alt="item.title"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+
+                  <!-- Badge Status Resolved -->
+                  <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100 flex items-center gap-1.5">
+                    <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                     </svg>
+                    <span>Reunited</span>
                   </div>
-                  <span class="text-xs font-semibold text-slate-400">Barang Terverifikasi</span>
+
+                  <div class="absolute top-3 right-3 bg-navy-900/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase">
+                    {{ item.category }}
+                  </div>
                 </div>
 
-                <!-- Badge Status Resolved -->
-                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100 flex items-center gap-1.5">
-                  <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                  </svg>
-                  <span>Reunited</span>
-                </div>
-
-                <div class="absolute top-3 right-3 bg-navy-900/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase">
-                  {{ item.category }}
-                </div>
+                <!-- Judul Barang & Lokasi -->
+                <h3 class="text-base font-extrabold text-navy-900 group-hover:text-brand-teal transition-colors line-clamp-1">
+                  {{ item.title }}
+                </h3>
+                <p class="text-xs text-text-secondary mt-1 flex items-center gap-1 line-clamp-1">
+                  <span>📍</span>
+                  <span>{{ item.location_name || 'Singaraja, Buleleng' }}</span>
+                </p>
               </div>
 
-              <!-- Judul Barang & Lokasi -->
-              <h3 class="text-base font-extrabold text-navy-900 group-hover:text-brand-teal transition-colors line-clamp-1">
-                {{ item.title }}
-              </h3>
-              <p class="text-xs text-text-secondary mt-1 flex items-center gap-1 line-clamp-1">
-                <span>📍</span>
-                <span>{{ item.location_name || 'Singaraja, Buleleng' }}</span>
-              </p>
+              <!-- Meta Waktu Selesai -->
+              <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span class="text-text-secondary font-medium">
+                  ⏱️ Berhasil dipertemukan {{ item.resolved_human }}
+                </span>
+                <span class="text-[11px] font-bold text-brand-teal bg-mint-wash px-2.5 py-0.5 rounded-full">
+                  Selesai
+                </span>
+              </div>
             </div>
+          </div>
 
-            <!-- Meta Waktu Selesai -->
-            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-text-secondary font-medium">
-                ⏱️ Berhasil dipertemukan {{ item.resolved_human }}
-              </span>
-              <span class="text-[11px] font-bold text-brand-teal bg-mint-wash px-2.5 py-0.5 rounded-full">
-                Selesai
-              </span>
-            </div>
+          <!-- Tombol Show More / Show Less Riwayat -->
+          <div v-if="historyItems.length > 3" class="mt-10 text-center">
+            <button
+              type="button"
+              @click="showAllHistory = !showAllHistory"
+              class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold border border-slate-200 shadow-sm hover:shadow transition-all group"
+            >
+              <span>{{ showAllHistory ? 'Tampilkan Lebih Sedikit (Show Less)' : `Lihat Semua Riwayat (${historyItems.length}) (Show More)` }}</span>
+              <svg
+                class="w-4 h-4 text-brand-teal transition-transform duration-200"
+                :class="showAllHistory ? 'rotate-180' : ''"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
           </div>
         </div>
 
-        <!-- Fallback jika belum ada data riwayat di database -->
+        <!-- Fallback jika belum ada data riwayat di database (Foto Asli) -->
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card">
-            <div class="relative w-full aspect-[4/3] rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
-              <span class="text-4xl">👜</span>
-              <div class="absolute top-3 left-3 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700">Reunited</div>
+          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card hover:shadow-xl transition-all flex flex-col justify-between group">
+            <div>
+              <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4">
+                <img
+                  src="https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80"
+                  alt="Dompet Kulit Pria"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100">Reunited</div>
+                <div class="absolute top-3 right-3 bg-navy-900/80 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase">Dompet &amp; Aksesoris</div>
+              </div>
+              <h3 class="text-base font-extrabold text-navy-900">Dompet Kulit Pria</h3>
+              <p class="text-xs text-text-secondary mt-1">📍 Taman Kota Singaraja</p>
             </div>
-            <h3 class="text-base font-bold text-navy-900">Dompet Kulit Pria</h3>
-            <p class="text-xs text-text-secondary mt-1">📍 Taman Kota Singaraja</p>
-            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold">
-              ⏱️ Berhasil dipertemukan dalam waktu 4 jam
-            </div>
-          </div>
-          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card">
-            <div class="relative w-full aspect-[4/3] rounded-2xl bg-teal-50 flex items-center justify-center mb-4">
-              <span class="text-4xl">🔑</span>
-              <div class="absolute top-3 left-3 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700">Reunited</div>
-            </div>
-            <h3 class="text-base font-bold text-navy-900">Kunci Motor Vario Smartkey</h3>
-            <p class="text-xs text-text-secondary mt-1">📍 Pantai Penimbangan, Singaraja</p>
-            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold">
-              ⏱️ Berhasil dipertemukan dalam waktu 6 jam
+            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold flex items-center justify-between">
+              <span>⏱️ Dipertemukan dalam 4 jam</span>
+              <span class="text-[11px] font-bold text-brand-teal bg-mint-wash px-2 py-0.5 rounded-full">Selesai</span>
             </div>
           </div>
-          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card">
-            <div class="relative w-full aspect-[4/3] rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
-              <span class="text-4xl">📱</span>
-              <div class="absolute top-3 left-3 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700">Reunited</div>
+
+          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card hover:shadow-xl transition-all flex flex-col justify-between group">
+            <div>
+              <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4">
+                <img
+                  src="https://images.unsplash.com/photo-1589134763158-7c8a6fcf7c61?auto=format&fit=crop&w=600&q=80"
+                  alt="Kunci Motor Smartkey"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100">Reunited</div>
+                <div class="absolute top-3 right-3 bg-navy-900/80 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase">Kunci &amp; Kendaraan</div>
+              </div>
+              <h3 class="text-base font-extrabold text-navy-900">Kunci Motor Vario Smartkey</h3>
+              <p class="text-xs text-text-secondary mt-1">📍 Pantai Penimbangan, Singaraja</p>
             </div>
-            <h3 class="text-base font-bold text-navy-900">Smartphone Android</h3>
-            <p class="text-xs text-text-secondary mt-1">📍 Perpustakaan Buleleng</p>
-            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold">
-              ⏱️ Berhasil dipertemukan dalam waktu 12 jam
+            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold flex items-center justify-between">
+              <span>⏱️ Dipertemukan dalam 6 jam</span>
+              <span class="text-[11px] font-bold text-brand-teal bg-mint-wash px-2 py-0.5 rounded-full">Selesai</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card hover:shadow-xl transition-all flex flex-col justify-between group">
+            <div>
+              <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4">
+                <img
+                  src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80"
+                  alt="Smartphone Android"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100">Reunited</div>
+                <div class="absolute top-3 right-3 bg-navy-900/80 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase">Elektronik &amp; Gadget</div>
+              </div>
+              <h3 class="text-base font-extrabold text-navy-900">Smartphone Android</h3>
+              <p class="text-xs text-text-secondary mt-1">📍 Perpustakaan Buleleng</p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold flex items-center justify-between">
+              <span>⏱️ Dipertemukan dalam 12 jam</span>
+              <span class="text-[11px] font-bold text-brand-teal bg-mint-wash px-2 py-0.5 rounded-full">Selesai</span>
             </div>
           </div>
         </div>
@@ -475,45 +521,67 @@
           </div>
         </div>
 
-        <div v-else-if="featuredReviews.length" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div
-            v-for="rev in featuredReviews"
-            :key="rev.id"
-            class="bg-slate-50 rounded-3xl p-7 border border-slate-200/60 shadow-card hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-          >
-            <div class="space-y-4">
-              <!-- Bintang Rating -->
-              <div class="flex items-center gap-1">
-                <svg
-                  v-for="star in 5"
-                  :key="star"
-                  class="w-4 h-4"
-                  :class="star <= rev.rating ? 'text-brand-orange fill-brand-orange' : 'text-slate-200 fill-slate-200'"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                </svg>
-                <span class="text-xs font-bold text-slate-700 ml-1.5">({{ rev.rating }}.0)</span>
-              </div>
+        <div v-else-if="featuredReviews.length">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              v-for="rev in displayedReviews"
+              :key="rev.id"
+              class="bg-slate-50 rounded-3xl p-7 border border-slate-200/60 shadow-card hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+            >
+              <div class="space-y-4">
+                <!-- Bintang Rating -->
+                <div class="flex items-center gap-1">
+                  <svg
+                    v-for="star in 5"
+                    :key="star"
+                    class="w-4 h-4"
+                    :class="star <= rev.rating ? 'text-brand-orange fill-brand-orange' : 'text-slate-200 fill-slate-200'"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                  <span class="text-xs font-bold text-slate-700 ml-1.5">({{ rev.rating }}.0)</span>
+                </div>
 
-              <!-- Komentar Pengguna -->
-              <p class="text-sm text-slate-700 leading-relaxed italic">
-                "{{ rev.comment }}"
-              </p>
-            </div>
-
-            <!-- Profil Penulis Ulasan -->
-            <div class="pt-6 mt-6 border-t border-slate-200/80 flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xs">
-                {{ rev.user?.name ? rev.user.name.charAt(0).toUpperCase() : 'U' }}
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-navy-900 truncate">{{ rev.user?.name || 'Pengguna Nodus' }}</p>
-                <p class="text-[10px] text-brand-teal font-semibold">
-                  ★ {{ rev.user?.trust_score || '5.0' }} Trust Score &bull; Terverifikasi
+                <!-- Komentar Pengguna -->
+                <p class="text-sm text-slate-700 leading-relaxed italic">
+                  "{{ rev.comment }}"
                 </p>
               </div>
+
+              <!-- Profil Penulis Ulasan -->
+              <div class="pt-6 mt-6 border-t border-slate-200/80 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xs">
+                  {{ rev.user?.name ? rev.user.name.charAt(0).toUpperCase() : 'U' }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-bold text-navy-900 truncate">{{ rev.user?.name || 'Pengguna Nodus' }}</p>
+                  <p class="text-[10px] text-brand-teal font-semibold">
+                    ★ {{ rev.user?.trust_score || '5.0' }} Trust Score &bull; Terverifikasi
+                  </p>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <!-- Tombol Show More / Show Less Testimoni -->
+          <div v-if="featuredReviews.length > 3" class="mt-10 text-center">
+            <button
+              type="button"
+              @click="showAllReviews = !showAllReviews"
+              class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-50 hover:bg-slate-100 text-navy-900 text-xs font-bold border border-slate-200 shadow-sm hover:shadow transition-all group"
+            >
+              <span>{{ showAllReviews ? 'Tampilkan Lebih Sedikit (Show Less)' : `Lihat Semua Ulasan (${featuredReviews.length}) (Show More)` }}</span>
+              <svg
+                class="w-4 h-4 text-brand-orange transition-transform duration-200"
+                :class="showAllReviews ? 'rotate-180' : ''"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -621,7 +689,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import axios from 'axios';
 import Navbar from '@/components/Navbar.vue';
@@ -632,9 +700,19 @@ const authModalOpen = ref(false);
 
 const historyItems = ref([]);
 const historyLoading = ref(true);
+const showAllHistory = ref(false);
+
+const displayedHistoryItems = computed(() => {
+  return showAllHistory.value ? historyItems.value : historyItems.value.slice(0, 3);
+});
 
 const featuredReviews = ref([]);
 const reviewsLoading = ref(true);
+const showAllReviews = ref(false);
+
+const displayedReviews = computed(() => {
+  return showAllReviews.value ? featuredReviews.value : featuredReviews.value.slice(0, 3);
+});
 
 onMounted(async () => {
   if (route.query.login === '1') {

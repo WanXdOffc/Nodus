@@ -89,15 +89,16 @@
           ></textarea>
         </div>
 
-        <!-- Unggah Bukti Gambar (Screenshot chat atau foto) -->
+        <!-- Unggah Bukti Gambar (Wajib: Screenshot chat atau foto) -->
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">
-            Lampiran Bukti (Screenshot Chat / Foto Barang)
+            Lampiran Bukti (Screenshot Chat / Foto Barang) <span class="text-rose-500">* (Wajib disertakan)</span>
           </label>
           <div class="flex items-center gap-3">
             <input
               type="file"
               accept="image/*"
+              required
               @change="handleEvidenceChange"
               class="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-600 hover:file:bg-rose-100 cursor-pointer"
             />
@@ -106,7 +107,7 @@
             </div>
           </div>
           <p class="text-[10px] text-text-secondary mt-1">
-            Format file: JPG, PNG, WebP (Maks 5MB).
+            Wajib menyertakan bukti screenshot chat atau foto indikasi pelanggaran (Format: JPG, PNG, WebP maks 5MB).
           </p>
         </div>
 
@@ -187,6 +188,11 @@ function handleEvidenceChange(e) {
 
 async function handleSubmit() {
   if (!props.targetUser?.id || !form.value.reason.trim()) return;
+
+  if (!evidenceFile.value) {
+    store.notify('Bukti foto/screenshot pelanggaran wajib disertakan!', 'error');
+    return;
+  }
 
   submitting.value = true;
   try {

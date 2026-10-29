@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Item;
 use Filament\Widgets\ChartWidget;
+use Illuminate\Support\Carbon;
 
 class ItemsChart extends ChartWidget
 {
@@ -17,12 +18,36 @@ class ItemsChart extends ChartWidget
 
     protected function getData(): array
     {
-        $lostCount = Item::where('type', 'lost')->count();
-        $foundCount = Item::where('type', 'found')->count();
+        $monthNames = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
 
-        // Data tren 6 bulan terakhir (Mei - Okt) dengan integrasi data aktual bulan berjalan
-        $lostData = [12, 16, 14, 22, 19, $lostCount > 0 ? (20 + $lostCount) : 24];
-        $foundData = [8, 13, 17, 19, 23, $foundCount > 0 ? (22 + $foundCount) : 28];
+        $labels = [];
+        $lostData = [];
+        $foundData = [];
+
+        // Hitung data aktual per bulan selama 6 bulan terakhir
+        for ($i = 5; $i >= 0; $i--) {
+            $targetDate = Carbon::now()->subMonths($i);
+            $year = $targetDate->year;
+            $month = $targetDate->month;
+
+            $labels[] = $monthNames[$month] ?? $targetDate->format('M');
+
+            $lostCount = Item::where('type', 'lost')
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->count();
+
+            $foundCount = Item::where('type', 'found')
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->count();
+
+            $lostData[] = $lostCount;
+            $foundData[] = $foundCount;
+        }
 
         return [
             'datasets' => [
@@ -43,7 +68,7 @@ class ItemsChart extends ChartWidget
                     'tension' => 0.4,
                 ],
             ],
-            'labels' => ['Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt'],
+            'labels' => $labels,
         ];
     }
 

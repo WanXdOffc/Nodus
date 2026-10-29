@@ -18,7 +18,7 @@ class UserReportController extends Controller
             'reported_user_id' => ['required', 'exists:users,id'],
             'reason_category' => ['nullable', 'string', 'max:100'],
             'reason' => ['required', 'string'],
-            'evidence_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'evidence_image' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ]);
 
         $fullReason = $validated['reason'];
