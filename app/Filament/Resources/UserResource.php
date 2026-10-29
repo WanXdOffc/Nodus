@@ -55,6 +55,10 @@ class UserResource extends Resource
                 Forms\Components\Toggle::make('is_banned')
                     ->label('Diblokir (Banned)')
                     ->default(false),
+                Forms\Components\Toggle::make('is_developer')
+                    ->label('Akses Developer API')
+                    ->helperText('Aktifkan izin akses ke Portal Developer dan API Publik NODUS')
+                    ->default(false),
             ]);
     }
 
@@ -81,6 +85,9 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('trust_score')
                     ->label('Trust Score')
                     ->sortable(),
+                Tables\Columns\ToggleColumn::make('is_developer')
+                    ->label('Developer API')
+                    ->sortable(),
                 Tables\Columns\IconColumn::make('is_banned')
                     ->label('Banned')
                     ->boolean()
@@ -92,6 +99,8 @@ class UserResource extends Resource
                         'user' => 'User',
                         'admin' => 'Admin',
                     ]),
+                Tables\Filters\TernaryFilter::make('is_developer')
+                    ->label('Akses Developer'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

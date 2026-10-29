@@ -29,6 +29,7 @@ class User extends Authenticatable implements FilamentUser
         'role',
         'trust_score',
         'is_banned',
+        'is_developer',
     ];
 
     /**
@@ -53,6 +54,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'trust_score' => 'float',
             'is_banned' => 'boolean',
+            'is_developer' => 'boolean',
         ];
     }
 

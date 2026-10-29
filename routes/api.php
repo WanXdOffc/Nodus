@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ClaimTicketController;
 use App\Http\Controllers\API\ItemController;
+use App\Http\Controllers\API\PublicApiController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\TicketMessageController;
 use App\Http\Controllers\API\UserReportController;
@@ -29,11 +30,15 @@ Route::get('/items/{item}', [ItemController::class, 'show']);
 // Public Featured Reviews
 Route::get('/reviews/featured', [ReviewController::class, 'indexFeatured']);
 
+// Public Interoperability API
+Route::get('/public/items', [PublicApiController::class, 'items']);
+
 // Protected Routes (auth:sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     // User Profile & Logout
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/user/request-developer', [PublicApiController::class, 'requestAccess']);
 
     // Store New Item (Lost / Found) with Gemini AI & Matchmaking
     Route::post('/items', [ItemController::class, 'store']);
