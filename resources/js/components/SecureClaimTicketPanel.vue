@@ -99,6 +99,46 @@
         </div>
       </div>
 
+      <!-- Accurate Location Mini-Map (Hanya jika tiket sudah di-approve admin) -->
+      <div
+        v-if="ticket?.admin_status === 'approved'"
+        class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3"
+      >
+        <div class="flex items-center justify-between text-xs font-bold text-navy-900 border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Titik Koordinat Asli Terverifikasi</span>
+          </div>
+          <span class="text-[10px] text-emerald-600 bg-emerald-50 font-bold px-2 py-0.5 rounded-full border border-emerald-100/80 flex items-center gap-1">
+            <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Akses Titik Presisi
+          </span>
+        </div>
+
+        <p class="text-[11px] text-text-secondary leading-relaxed">
+          Privasi publik di peta luar dikaburkan dalam zona radius 500m. Di dalam tiket resmi yang disetujui ini, pin lokasi menunjukkan titik koordinat aslinya.
+        </p>
+
+        <!-- Container Leaflet Mini-Map -->
+        <div class="relative w-full h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 z-0">
+          <div ref="miniMapContainer" class="w-full h-full z-0"></div>
+
+          <!-- Mini Legend -->
+          <div class="absolute bottom-2 left-2 z-[400] bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-xl text-[10px] font-semibold text-slate-700 shadow-sm border border-slate-200/80 flex items-center gap-3 pointer-events-auto">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+              <span>Barang Hilang</span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-brand-teal"></span>
+              <span>Barang Temuan</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- QR Handshake Section (Verifikasi Serah Terima) -->
       <!-- Jika User adalah Pelapor: Tampilkan QR Code -->
       <div
@@ -280,7 +320,9 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '@/store/appStore';
 import QrcodeVue from 'qrcode.vue';
 import QrScannerModal from '@/components/QrScannerModal.vue';
@@ -303,6 +345,8 @@ const actionLoading = ref(false);
 const reportModalOpen = ref(false);
 const showReviewModal = ref(false);
 const scannerModalOpen = ref(false);
+const miniMapContainer = ref(null);
+let miniMapInstance = null;
 
 const currentUserId = computed(() => store.user?.id);
 const messages = computed(() => store.ticketMessages);
@@ -397,4 +441,123 @@ async function handleAction(status) {
     actionLoading.value = false;
   }
 }
+
+function initMiniMap() {
+  if (!miniMapContainer.value || !props.ticket || props.ticket.admin_status !== 'approved') return;
+
+  if (miniMapInstance) {
+    miniMapInstance.remove();
+    miniMapInstance = null;
+  }
+
+  const lostLat = Number(props.ticket.lost_item?.latitude ?? props.ticket.lostItem?.latitude);
+  const lostLng = Number(props.ticket.lost_item?.longitude ?? props.ticket.lostItem?.longitude);
+  const foundLat = Number(props.ticket.found_item?.latitude ?? props.ticket.foundItem?.latitude);
+  const foundLng = Number(props.ticket.found_item?.longitude ?? props.ticket.foundItem?.longitude);
+
+  const validLost = !isNaN(lostLat) && !isNaN(lostLng) && lostLat !== 0;
+  const validFound = !isNaN(foundLat) && !isNaN(foundLng) && foundLat !== 0;
+
+  const defaultCenter = [-8.112, 115.088];
+  const center = validLost ? [lostLat, lostLng] : (validFound ? [foundLat, foundLng] : defaultCenter);
+
+  miniMapInstance = L.map(miniMapContainer.value, {
+    center: center,
+    zoom: 14,
+    zoomControl: false,
+    attributionControl: false,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(miniMapInstance);
+
+  const bounds = [];
+
+  // Marker titik koordinat asli barang hilang (Orange)
+  if (validLost) {
+    const lostIcon = L.divIcon({
+      className: 'accurate-lost-marker',
+      html: `
+        <div style="position:relative; width:28px; height:28px; display:flex; align-items:center; justify-content:center;">
+          <div style="position:absolute; inset:0; border-radius:9999px; background:rgba(255,107,53,0.3); animation:ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="width:22px; height:22px; background:#FF6B35; border:2px solid white; border-radius:9999px; box-shadow:0 3px 8px rgba(0,0,0,0.25); display:flex; align-items:center; justify-content:center; color:white; font-size:10px; font-weight:800;">
+            H
+          </div>
+        </div>
+      `,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    const lostMarker = L.marker([lostLat, lostLng], { icon: lostIcon }).addTo(miniMapInstance);
+    lostMarker.bindPopup(`
+      <div style="font-family: inherit; font-size: 11px; padding: 2px;">
+        <span style="color:#FF6B35; font-weight:800; text-transform:uppercase;">Titik Hilang Asli</span>
+        <div style="font-weight:700; color:#1e293b; margin-top:2px;">${props.ticket.lost_item?.title || props.ticket.lostItem?.title || 'Barang Hilang'}</div>
+        <div style="color:#64748b; font-size:10px;">📍 ${props.ticket.lost_item?.location_name || props.ticket.lostItem?.location_name || ''}</div>
+      </div>
+    `);
+    bounds.push([lostLat, lostLng]);
+  }
+
+  // Marker titik koordinat asli barang temuan (Teal)
+  if (validFound) {
+    const foundIcon = L.divIcon({
+      className: 'accurate-found-marker',
+      html: `
+        <div style="position:relative; width:28px; height:28px; display:flex; align-items:center; justify-content:center;">
+          <div style="position:absolute; inset:0; border-radius:9999px; background:rgba(20,184,166,0.3); animation:ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="width:22px; height:22px; background:#14B8A6; border:2px solid white; border-radius:9999px; box-shadow:0 3px 8px rgba(0,0,0,0.25); display:flex; align-items:center; justify-content:center; color:white; font-size:10px; font-weight:800;">
+            T
+          </div>
+        </div>
+      `,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    const foundMarker = L.marker([foundLat, foundLng], { icon: foundIcon }).addTo(miniMapInstance);
+    foundMarker.bindPopup(`
+      <div style="font-family: inherit; font-size: 11px; padding: 2px;">
+        <span style="color:#14B8A6; font-weight:800; text-transform:uppercase;">Titik Temu Asli</span>
+        <div style="font-weight:700; color:#1e293b; margin-top:2px;">${props.ticket.found_item?.title || props.ticket.foundItem?.title || 'Barang Temuan'}</div>
+        <div style="color:#64748b; font-size:10px;">📍 ${props.ticket.found_item?.location_name || props.ticket.foundItem?.location_name || ''}</div>
+      </div>
+    `);
+    bounds.push([foundLat, foundLng]);
+  }
+
+  if (bounds.length > 1) {
+    miniMapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
+  } else if (bounds.length === 1) {
+    miniMapInstance.setView(bounds[0], 15);
+  }
+
+  setTimeout(() => {
+    miniMapInstance?.invalidateSize();
+  }, 250);
+}
+
+onMounted(() => {
+  nextTick(() => {
+    initMiniMap();
+  });
+});
+
+watch(
+  () => [props.ticket?.id, props.ticket?.admin_status],
+  () => {
+    nextTick(() => {
+      initMiniMap();
+    });
+  }
+);
+
+onUnmounted(() => {
+  if (miniMapInstance) {
+    miniMapInstance.remove();
+    miniMapInstance = null;
+  }
+});
 </script>
