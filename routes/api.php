@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ClaimTicketController;
 use App\Http\Controllers\API\ItemController;
+use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\TicketMessageController;
 use App\Http\Controllers\API\UserReportController;
 use Illuminate\Support\Facades\Route;
@@ -20,9 +21,13 @@ use Illuminate\Support\Facades\Route;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// Public Items Browsing
+// Public Items Browsing & History
 Route::get('/items', [ItemController::class, 'index']);
+Route::get('/items/history', [ItemController::class, 'resolvedHistory']);
 Route::get('/items/{item}', [ItemController::class, 'show']);
+
+// Public Featured Reviews
+Route::get('/reviews/featured', [ReviewController::class, 'indexFeatured']);
 
 // Protected Routes (auth:sanctum)
 Route::middleware('auth:sanctum')->group(function () {
@@ -47,4 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User Reports
     Route::post('/user-reports', [UserReportController::class, 'store']);
+
+    // App Reviews
+    Route::post('/reviews', [ReviewController::class, 'store']);
 });

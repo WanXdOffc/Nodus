@@ -209,8 +209,133 @@
       </div>
     </section>
 
+    <!-- Section Riwayat Sukses (Clean Background Off-White) -->
+    <section id="riwayat-sukses" class="py-20 sm:py-28 bg-slate-50 border-b border-slate-200/60">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        <!-- Section Header -->
+        <div class="text-center max-w-2xl mx-auto mb-14 space-y-4">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Riwayat Sukses Terbaru
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-navy-900 tracking-tight">
+            Kisah Rekonsiliasi Barang yang Telah Selesai
+          </h2>
+          <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
+            Setiap barang yang berhasil kembali adalah bukti nyata kekuatan komunitas yang saling peduli dan akurasi pencocokan AI.
+          </p>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div v-if="historyLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div v-for="i in 3" :key="i" class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card animate-pulse space-y-4">
+            <div class="w-full aspect-[4/3] bg-slate-200 rounded-2xl"></div>
+            <div class="h-4 bg-slate-200 rounded-md w-3/4"></div>
+            <div class="h-3 bg-slate-200 rounded-md w-1/2"></div>
+          </div>
+        </div>
+
+        <!-- Horizontal Grid Kartu Barang -->
+        <div v-else-if="historyItems.length" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="item in historyItems"
+            :key="item.id"
+            class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
+          >
+            <div>
+              <!-- Gambar Barang atau Fallback Visual -->
+              <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center">
+                <img
+                  v-if="item.image_path"
+                  :src="'/storage/' + item.image_path"
+                  :alt="item.title"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div v-else class="text-center p-4">
+                  <div class="w-12 h-12 rounded-2xl bg-mint-wash text-brand-teal mx-auto flex items-center justify-center mb-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                  <span class="text-xs font-semibold text-slate-400">Barang Terverifikasi</span>
+                </div>
+
+                <!-- Badge Status Resolved -->
+                <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-emerald-700 shadow-xs border border-emerald-100 flex items-center gap-1.5">
+                  <svg class="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                  </svg>
+                  <span>Reunited</span>
+                </div>
+
+                <div class="absolute top-3 right-3 bg-navy-900/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase">
+                  {{ item.category }}
+                </div>
+              </div>
+
+              <!-- Judul Barang & Lokasi -->
+              <h3 class="text-base font-extrabold text-navy-900 group-hover:text-brand-teal transition-colors line-clamp-1">
+                {{ item.title }}
+              </h3>
+              <p class="text-xs text-text-secondary mt-1 flex items-center gap-1 line-clamp-1">
+                <span>📍</span>
+                <span>{{ item.location_name || 'Singaraja, Buleleng' }}</span>
+              </p>
+            </div>
+
+            <!-- Meta Waktu Selesai -->
+            <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span class="text-text-secondary font-medium">
+                ⏱️ Berhasil dipertemukan {{ item.resolved_human }}
+              </span>
+              <span class="text-[11px] font-bold text-brand-teal bg-mint-wash px-2.5 py-0.5 rounded-full">
+                Selesai
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fallback jika belum ada data riwayat di database -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card">
+            <div class="relative w-full aspect-[4/3] rounded-2xl bg-orange-50 flex items-center justify-center mb-4">
+              <span class="text-4xl">👜</span>
+              <div class="absolute top-3 left-3 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700">Reunited</div>
+            </div>
+            <h3 class="text-base font-bold text-navy-900">Dompet Kulit Pria</h3>
+            <p class="text-xs text-text-secondary mt-1">📍 Taman Kota Singaraja</p>
+            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold">
+              ⏱️ Berhasil dipertemukan dalam waktu 4 jam
+            </div>
+          </div>
+          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card">
+            <div class="relative w-full aspect-[4/3] rounded-2xl bg-teal-50 flex items-center justify-center mb-4">
+              <span class="text-4xl">🔑</span>
+              <div class="absolute top-3 left-3 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700">Reunited</div>
+            </div>
+            <h3 class="text-base font-bold text-navy-900">Kunci Motor Vario Smartkey</h3>
+            <p class="text-xs text-text-secondary mt-1">📍 Pantai Penimbangan, Singaraja</p>
+            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold">
+              ⏱️ Berhasil dipertemukan dalam waktu 6 jam
+            </div>
+          </div>
+          <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-card">
+            <div class="relative w-full aspect-[4/3] rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
+              <span class="text-4xl">📱</span>
+              <div class="absolute top-3 left-3 bg-white px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-700">Reunited</div>
+            </div>
+            <h3 class="text-base font-bold text-navy-900">Smartphone Android</h3>
+            <p class="text-xs text-text-secondary mt-1">📍 Perpustakaan Buleleng</p>
+            <div class="pt-3 mt-3 border-t border-slate-100 text-xs text-brand-teal font-semibold">
+              ⏱️ Berhasil dipertemukan dalam waktu 12 jam
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Features Grid (3 Kolom Bento-Box, Latar Putih, Soft Shadow) -->
-    <section id="cara-kerja" class="py-20 sm:py-28 bg-slate-50/50">
+    <section id="cara-kerja" class="py-20 sm:py-28 bg-white">
       <div class="max-w-6xl mx-auto px-4 sm:px-6">
         <!-- Section Header -->
         <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
@@ -322,6 +447,138 @@
       </div>
     </section>
 
+    <!-- Section Testimoni (Data Real dari API /api/reviews/featured) -->
+    <section id="testimoni" class="py-20 sm:py-28 bg-white border-b border-slate-100">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        <!-- Section Header -->
+        <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 text-brand-orange text-xs font-bold">
+            <svg class="w-3.5 h-3.5 fill-brand-orange" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            Ulasan Komunitas Nodus
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-navy-900 tracking-tight">
+            Apa Kata Pengguna yang Telah Terbantu
+          </h2>
+          <p class="text-sm sm:text-base text-text-secondary leading-relaxed">
+            Testimoni otentik dari pengguna yang menemukan dan mengembalikan barang dengan aman melalui Nodus.
+          </p>
+        </div>
+
+        <!-- Real Testimonials Cards -->
+        <div v-if="reviewsLoading" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div v-for="i in 3" :key="i" class="bg-slate-50 rounded-3xl p-6 border border-slate-100 animate-pulse space-y-4">
+            <div class="h-4 bg-slate-200 rounded w-1/3"></div>
+            <div class="h-12 bg-slate-200 rounded"></div>
+            <div class="h-6 bg-slate-200 rounded w-1/2"></div>
+          </div>
+        </div>
+
+        <div v-else-if="featuredReviews.length" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            v-for="rev in featuredReviews"
+            :key="rev.id"
+            class="bg-slate-50 rounded-3xl p-7 border border-slate-200/60 shadow-card hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
+          >
+            <div class="space-y-4">
+              <!-- Bintang Rating -->
+              <div class="flex items-center gap-1">
+                <svg
+                  v-for="star in 5"
+                  :key="star"
+                  class="w-4 h-4"
+                  :class="star <= rev.rating ? 'text-brand-orange fill-brand-orange' : 'text-slate-200 fill-slate-200'"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span class="text-xs font-bold text-slate-700 ml-1.5">({{ rev.rating }}.0)</span>
+              </div>
+
+              <!-- Komentar Pengguna -->
+              <p class="text-sm text-slate-700 leading-relaxed italic">
+                "{{ rev.comment }}"
+              </p>
+            </div>
+
+            <!-- Profil Penulis Ulasan -->
+            <div class="pt-6 mt-6 border-t border-slate-200/80 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xs">
+                {{ rev.user?.name ? rev.user.name.charAt(0).toUpperCase() : 'U' }}
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-navy-900 truncate">{{ rev.user?.name || 'Pengguna Nodus' }}</p>
+                <p class="text-[10px] text-brand-teal font-semibold">
+                  ★ {{ rev.user?.trust_score || '5.0' }} Trust Score &bull; Terverifikasi
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fallback Default Testimoni jika belum ada review featured di database -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-slate-50 rounded-3xl p-7 border border-slate-200/60 shadow-card flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex items-center gap-1 text-brand-orange">
+                <span v-for="i in 5" :key="i">★</span>
+                <span class="text-xs font-bold text-slate-700 ml-1.5">(5.0)</span>
+              </div>
+              <p class="text-sm text-slate-700 leading-relaxed italic">
+                "Dompet saya yang jatuh di Pantai Penimbangan kembali hanya dalam waktu 3 jam berkat pencocokan AI Nodus. Luar biasa aman dan terpercaya!"
+              </p>
+            </div>
+            <div class="pt-6 mt-6 border-t border-slate-200/80 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xs">D</div>
+              <div>
+                <p class="text-xs font-bold text-navy-900">Dharmawan</p>
+                <p class="text-[10px] text-brand-teal font-semibold">★ 5.0 Trust Score &bull; Terverifikasi</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-3xl p-7 border border-slate-200/60 shadow-card flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex items-center gap-1 text-brand-orange">
+                <span v-for="i in 5" :key="i">★</span>
+                <span class="text-xs font-bold text-slate-700 ml-1.5">(5.0)</span>
+              </div>
+              <p class="text-sm text-slate-700 leading-relaxed italic">
+                "Fitur chat terenkripsi dan verifikasi kepemilikan sangat membantu. Saya tidak perlu khawatir nomor pribadi tersebar saat mengembalikan tas."
+              </p>
+            </div>
+            <div class="pt-6 mt-6 border-t border-slate-200/80 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-brand-orange text-white flex items-center justify-center font-bold text-xs">A</div>
+              <div>
+                <p class="text-xs font-bold text-navy-900">Aryasuta</p>
+                <p class="text-[10px] text-brand-teal font-semibold">★ 5.0 Trust Score &bull; Terverifikasi</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-3xl p-7 border border-slate-200/60 shadow-card flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex items-center gap-1 text-brand-orange">
+                <span v-for="i in 5" :key="i">★</span>
+                <span class="text-xs font-bold text-slate-700 ml-1.5">(5.0)</span>
+              </div>
+              <p class="text-sm text-slate-700 leading-relaxed italic">
+                "Sistem reputasi dinamis membuat orang terdorong untuk jujur. Senang sekali kunci motor saya bisa ketemu dengan cepat!"
+              </p>
+            </div>
+            <div class="pt-6 mt-6 border-t border-slate-200/80 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-navy-900 text-white flex items-center justify-center font-bold text-xs">P</div>
+              <div>
+                <p class="text-xs font-bold text-navy-900">Putu Ayu</p>
+                <p class="text-[10px] text-brand-teal font-semibold">★ 5.0 Trust Score &bull; Terverifikasi</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Footer Minimalis (Dark Navy bg-navy-900) -->
     <footer class="w-full bg-navy-900 text-slate-400 py-12 sm:py-16 border-t border-slate-800">
       <div class="max-w-6xl mx-auto px-4 sm:px-6">
@@ -342,8 +599,9 @@
           <!-- Tautan Cepat -->
           <div class="flex items-center gap-8 text-xs font-medium">
             <a href="#hero" class="hover:text-white transition-colors">Home</a>
+            <a href="#riwayat-sukses" class="hover:text-white transition-colors">Riwayat</a>
             <a href="#cara-kerja" class="hover:text-white transition-colors">Cara Kerja</a>
-            <a href="#keamanan" class="hover:text-white transition-colors">Keamanan</a>
+            <a href="#testimoni" class="hover:text-white transition-colors">Testimoni</a>
             <a href="/admin" class="hover:text-white transition-colors">Admin Portal</a>
           </div>
         </div>
@@ -365,17 +623,47 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import axios from 'axios';
 import Navbar from '@/components/Navbar.vue';
 import AuthModal from '@/components/AuthModal.vue';
 
 const route = useRoute();
 const authModalOpen = ref(false);
 
-onMounted(() => {
+const historyItems = ref([]);
+const historyLoading = ref(true);
+
+const featuredReviews = ref([]);
+const reviewsLoading = ref(true);
+
+onMounted(async () => {
   if (route.query.login === '1') {
     authModalOpen.value = true;
   }
+
+  fetchLandingData();
 });
+
+async function fetchLandingData() {
+  try {
+    const [historyRes, reviewsRes] = await Promise.allSettled([
+      axios.get('/api/items/history'),
+      axios.get('/api/reviews/featured'),
+    ]);
+
+    if (historyRes.status === 'fulfilled') {
+      historyItems.value = historyRes.value.data || [];
+    }
+    if (reviewsRes.status === 'fulfilled') {
+      featuredReviews.value = reviewsRes.value.data || [];
+    }
+  } catch (err) {
+    console.error('Failed to fetch landing data:', err);
+  } finally {
+    historyLoading.value = false;
+    reviewsLoading.value = false;
+  }
+}
 
 watch(
   () => route.query.login,

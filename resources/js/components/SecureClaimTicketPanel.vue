@@ -195,6 +195,11 @@
       v-model="reportModalOpen"
       :target-user="counterpartUser"
     />
+
+    <!-- Modal Ulasan Aplikasi (Pemicu Acak setelah Klaim Sukses) -->
+    <ReviewModal
+      v-model="showReviewModal"
+    />
   </div>
 </template>
 
@@ -202,6 +207,7 @@
 import { computed, ref } from 'vue';
 import { useAppStore } from '@/store/appStore';
 import ReportUserModal from '@/components/ReportUserModal.vue';
+import ReviewModal from '@/components/ReviewModal.vue';
 
 const props = defineProps({
   ticket: {
@@ -217,6 +223,7 @@ const newMessage = ref('');
 const sending = ref(false);
 const actionLoading = ref(false);
 const reportModalOpen = ref(false);
+const showReviewModal = ref(false);
 
 const currentUserId = computed(() => store.user?.id);
 const messages = computed(() => store.ticketMessages);
@@ -251,6 +258,13 @@ async function handleVerifyOwnership() {
   actionLoading.value = true;
   try {
     await store.resolveClaimTicket(props.ticket.id);
+
+    // Pemicu 1: Logika acak setelah sukses klaim untuk memunculkan modal ulasan
+    if (Math.random() > 0.5) {
+      setTimeout(() => {
+        showReviewModal.value = true;
+      }, 700);
+    }
   } catch (err) {
     // handled in store
   } finally {
