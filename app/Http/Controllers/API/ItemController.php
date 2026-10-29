@@ -91,16 +91,16 @@ class ItemController extends Controller
     }
 
     /**
-     * Menambahkan Smart Directional Noise (maksimal 500m / ~0.0045 derajat) untuk menyamarkan koordinat publik.
+     * Menambahkan Smart Directional Noise (maksimal 300m / ~0.0025 derajat) untuk menyamarkan koordinat publik.
      */
     private function obfuscateCoordinates(Item $item): Item
     {
         if ($item->latitude !== null && $item->longitude !== null) {
-            $max_noise = 0.0045; // ~500 meter
+            $max_noise = 0.0025; // ~300 meter (0.0025 derajat koordinat)
             $x = (mt_rand(-100, 100) / 100) * $max_noise; // Acak Barat-Timur
             $y = (mt_rand(10, 100) / 100) * $max_noise; // Hanya positif (Selatan / daratan)
-            if (abs($x) < 0.0005) {
-                $x = 0.0015;
+            if (abs($x) < 0.0003) {
+                $x = 0.0008;
             }
 
             $item->latitude = round((float) $item->latitude - $y, 6); // Geser ke Selatan (daratan)

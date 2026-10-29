@@ -91,9 +91,16 @@ class ClaimTicketController extends Controller
             'status' => ['required', 'in:open,verified,rejected'],
         ]);
 
+        // Mencegah bypass: status 'verified' hanya boleh diubah melalui endpoint verify-qr (kecuali admin)
+        if ($validated['status'] === 'verified' && ! $request->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Verifikasi serah terima wajib dilakukan melalui pemindaian QR Code (verify-qr).',
+            ], 403);
+        }
+
         $claimTicket->update(['status' => $validated['status']]);
 
-        // Jika diverifikasi, tandai kedua barang menjadi resolved
+        // Jika diverifikasi oleh admin, tandai kedua barang menjadi resolved
         if ($validated['status'] === 'verified') {
             $claimTicket->lostItem->update(['status' => 'resolved']);
             $claimTicket->foundItem->update(['status' => 'resolved']);
@@ -109,45 +116,13 @@ class ClaimTicketController extends Controller
     }
 
     /**
-     * Menyelesaikan tiket klaim (resolusi kepemilikan) dan menambah trust score pengguna.
+     * Endpoint resolusi langsung tanpa token telah dinonaktifkan (Wajib verifikasi via QR).
      */
     public function resolveTicket(Request $request, $id): JsonResponse
     {
-        $userId = $request->user()->id;
-
-        $ticket = ClaimTicket::with(['lostItem.user', 'foundItem.user'])->findOrFail($id);
-
-        // Otorisasi: pemilik barang hilang, pemilik barang temuan, atau admin
-        $isOwner = $ticket->lostItem->user_id === $userId || $ticket->foundItem->user_id === $userId;
-        if (! $isOwner && ! $request->user()->isAdmin()) {
-            return response()->json([
-                'message' => 'Anda tidak memiliki hak akses untuk menyelesaikan tiket klaim ini.',
-            ], 403);
-        }
-
-        // Pastikan tiket masih 'open'
-        if ($ticket->status !== 'open') {
-            return response()->json([
-                'message' => 'Tiket klaim ini sudah diselesaikan atau ditutup sebelumnya.',
-            ], 422);
-        }
-
-        // Pastikan tiket sudah disetujui oleh admin (admin_status: approved)
-        if ($ticket->admin_status !== 'approved') {
-            return response()->json([
-                'message' => 'Tiket klaim ini belum disetujui oleh admin untuk dapat diselesaikan.',
-            ], 422);
-        }
-
-        $this->executeResolution($ticket);
-
         return response()->json([
-            'message' => 'Klaim Berhasil! Trust Score Anda meningkat.',
-            'ticket' => $ticket->fresh([
-                'lostItem.user:id,name,trust_score',
-                'foundItem.user:id,name,trust_score',
-            ]),
-        ]);
+            'message' => 'Endpoint resolusi klaim langsung tanpa token telah dinonaktifkan. Seluruh serah terima barang wajib diverifikasi melalui pemindaian QR Code (POST /api/claim-tickets/{id}/verify-qr).',
+        ], 403);
     }
 
     /**

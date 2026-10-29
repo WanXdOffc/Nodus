@@ -370,17 +370,20 @@ class ItemAndAiMatchingTest extends TestCase
 
         $tokenOwner = $userLost->createToken('owner')->plainTextToken;
 
-        // 1. Resolusi gagal jika belum di-approve admin
-        $resNotApproved = $this->withHeader('Authorization', 'Bearer ' . $tokenOwner)
+        // 1. Direct resolve tanpa QR ditolak (403 Forbidden)
+        $resDirectResolve = $this->withHeader('Authorization', 'Bearer ' . $tokenOwner)
             ->postJson("/api/claim-tickets/{$ticket->id}/resolve");
-        $resNotApproved->assertStatus(422);
+        $resDirectResolve->assertStatus(403);
 
         $this->app['auth']->forgetGuards();
 
-        // 2. Admin meng-approve tiket
-        $ticket->update(['admin_status' => 'approved']);
+        // 2. Admin meng-approve tiket dan qr_token di-generate
+        $ticket->update([
+            'admin_status' => 'approved',
+            'qr_token' => (string) \Illuminate\Support\Str::uuid(),
+        ]);
 
-        // 3. User asing mencoba menyelesaikan tiket -> 403 Forbidden
+        // 3. User asing mencoba verifikasi QR tiket -> 403 Forbidden
         $stranger = User::create([
             'name' => 'Stranger',
             'email' => 'stranger@example.com',
@@ -390,14 +393,14 @@ class ItemAndAiMatchingTest extends TestCase
         ]);
         $tokenStranger = $stranger->createToken('stranger')->plainTextToken;
         $this->withHeader('Authorization', 'Bearer ' . $tokenStranger)
-            ->postJson("/api/claim-tickets/{$ticket->id}/resolve")
+            ->postJson("/api/claim-tickets/{$ticket->id}/verify-qr", ['token' => $ticket->qr_token])
             ->assertStatus(403);
 
         $this->app['auth']->forgetGuards();
 
-        // 4. Pemilik menyelesaikan tiket
+        // 4. Verifikasi serah terima sah via scan QR token
         $resSuccess = $this->withHeader('Authorization', 'Bearer ' . $tokenOwner)
-            ->postJson("/api/claim-tickets/{$ticket->id}/resolve");
+            ->postJson("/api/claim-tickets/{$ticket->id}/verify-qr", ['token' => $ticket->qr_token]);
         $resSuccess->assertStatus(200)
             ->assertJsonPath('ticket.status', 'verified');
 

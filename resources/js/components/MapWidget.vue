@@ -17,11 +17,11 @@
     <div class="absolute bottom-3 right-4 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-3.5 text-[11px] pointer-events-auto">
       <div class="flex items-center gap-1.5">
         <span class="w-2.5 h-2.5 rounded-full bg-brand-orange ring-2 ring-orange-200"></span>
-        <span class="text-slate-700 font-semibold">Zona Hilang (~500m)</span>
+        <span class="text-slate-700 font-semibold">Zona Hilang (~300m)</span>
       </div>
       <div class="flex items-center gap-1.5">
         <span class="w-2.5 h-2.5 rounded-full bg-brand-teal ring-2 ring-teal-200"></span>
-        <span class="text-slate-700 font-semibold">Zona Temuan (~500m)</span>
+        <span class="text-slate-700 font-semibold">Zona Temuan (~300m)</span>
       </div>
     </div>
   </div>
@@ -119,9 +119,9 @@ function renderMarkers() {
     const isLost = item.type === 'lost';
     const markerColor = isLost ? '#FF6B35' : '#14B8A6';
 
-    // Gunakan L.circle dengan radius 500 meter untuk mengaburkan lokasi publik demi privasi
+    // Gunakan L.circle dengan radius 300 meter untuk mengaburkan lokasi publik demi privasi
     const circle = L.circle([lat, lng], {
-      radius: 500,
+      radius: 300,
       color: '#14B8A6',
       fillColor: markerColor,
       fillOpacity: 0.1,
@@ -132,7 +132,7 @@ function renderMarkers() {
     circle.bindPopup(`
       <div style="font-family: inherit; font-size: 12px; min-width: 160px; padding: 4px;">
         <span style="display:inline-block; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 9999px; margin-bottom: 6px; background: ${isLost ? '#FFF1ED' : '#E6F7F5'}; color: ${markerColor};">
-          Zona Perkiraan (~500m)
+          Zona Perkiraan (~300m)
         </span>
         <div style="font-weight: 700; color: #1B2A33; font-size: 13px; margin-bottom: 3px; line-height: 1.3;">${item.title}</div>
         <div style="color: #64748b; font-size: 11px;">📍 Area ${item.location_name || 'Singaraja'}</div>

@@ -118,7 +118,7 @@
         </div>
 
         <p class="text-[11px] text-text-secondary leading-relaxed">
-          Privasi publik di peta luar dikaburkan dalam zona radius 500m. Di dalam tiket resmi yang disetujui ini, pin lokasi menunjukkan titik koordinat aslinya.
+          Privasi publik di peta luar dikaburkan dalam zona radius 300m. Di dalam tiket resmi yang disetujui ini, pin lokasi menunjukkan titik koordinat aslinya.
         </p>
 
         <!-- Container Leaflet Mini-Map -->
@@ -139,42 +139,56 @@
         </div>
       </div>
 
-      <!-- QR Handshake Section (Verifikasi Serah Terima) -->
-      <!-- Jika User adalah Pelapor: Tampilkan QR Code -->
+      <!-- QR Handshake Information Banner -->
+      <!-- Jika User adalah Pelapor: Info QR Handshake -->
       <div
-        v-if="ticket?.status === 'open' && (isReporter || (!isReporter && !isFinder))"
-        class="bg-gradient-to-b from-teal-50/60 to-white rounded-2xl p-4 border border-teal-100 shadow-sm text-center space-y-3"
+        v-if="ticket?.status === 'open' && isReporter"
+        class="bg-gradient-to-r from-teal-500/10 via-brand-teal/5 to-transparent rounded-2xl p-4 border border-teal-200/60 flex items-center justify-between gap-3 shadow-xs"
       >
-        <div class="flex items-center justify-between text-xs font-bold text-navy-900 border-b border-teal-100/70 pb-2">
-          <span class="flex items-center gap-1.5 text-brand-teal">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-brand-teal text-white flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
             </svg>
-            QR Handshake Pelapor
-          </span>
-          <span class="text-[10px] bg-brand-teal/15 text-brand-teal px-2 py-0.5 rounded-full font-bold">
-            Tunjukkan ke Penemu
-          </span>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-navy-900 truncate">QR Handshake Pelapor Siap</p>
+            <p class="text-[11px] text-text-secondary">Tunjukkan QR ke penemu saat bertemu langsung untuk menyelesaikan klaim.</p>
+          </div>
         </div>
+        <button
+          type="button"
+          @click="showQrModal = true"
+          class="px-3.5 py-1.5 bg-brand-teal hover:bg-[#00ad95] text-white text-[11px] font-bold rounded-xl transition-all shadow-xs flex-shrink-0 cursor-pointer"
+        >
+          Lihat QR
+        </button>
+      </div>
 
-        <div class="bg-white p-3 rounded-2xl border border-slate-200/80 inline-block shadow-sm">
-          <qrcode-vue
-            :value="ticket?.qr_token || 'nodus-pending-token'"
-            :size="150"
-            level="H"
-            render-as="svg"
-            class="mx-auto"
-          />
+      <!-- Jika User adalah Penemu: Info Scanner Kamera -->
+      <div
+        v-else-if="ticket?.status === 'open' && isFinder"
+        class="bg-gradient-to-r from-teal-500/10 via-brand-teal/5 to-transparent rounded-2xl p-4 border border-teal-200/60 flex items-center justify-between gap-3 shadow-xs"
+      >
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-xl bg-brand-teal text-white flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-navy-900 truncate">Verifikasi Scanner Penemu</p>
+            <p class="text-[11px] text-text-secondary">Pindai kode QR pelapor untuk memvalidasi penyerahan barang.</p>
+          </div>
         </div>
-
-        <div class="space-y-1">
-          <p class="text-xs font-bold text-navy-900">
-            Tunjukkan QR ini kepada penemu saat bertemu
-          </p>
-          <p class="text-[11px] text-text-secondary leading-relaxed max-w-xs mx-auto">
-            Penemu akan memindai kode QR ini untuk memverifikasi serah terima secara aman dan menaikkan reputasi Trust Score.
-          </p>
-        </div>
+        <button
+          type="button"
+          @click="scannerModalOpen = true"
+          class="px-3.5 py-1.5 bg-brand-teal hover:bg-[#00ad95] text-white text-[11px] font-bold rounded-xl transition-all shadow-xs flex-shrink-0 cursor-pointer"
+        >
+          Pindai
+        </button>
       </div>
 
       <!-- Jika Tiket Berhasil Diverifikasi: Tampilkan Banner Sukses Handshake -->
@@ -266,38 +280,105 @@
 
     <!-- Action Area (Bawah) -->
     <div class="p-5 border-t border-slate-200/80 bg-slate-50/50 space-y-2.5 flex-shrink-0">
-      <!-- Jika User adalah Penemu (Finder): Tombol Pindai QR Pelapor Utama -->
-      <button
-        v-if="ticket?.status === 'open' && (isFinder || (!isReporter && !isFinder))"
-        @click="scannerModalOpen = true"
-        :disabled="actionLoading"
-        class="w-full py-3 px-4 bg-brand-teal hover:bg-[#00ad95] disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+      <!-- STATE 1: Tiket Sudah Selesai (Verified / Resolved) -->
+      <div
+        v-if="ticket?.status === 'verified' || ticket?.status === 'resolved'"
+        class="w-full py-3 px-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center gap-2 text-emerald-800 font-bold text-xs shadow-xs"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-        </svg>
-        <span>Pindai QR Pelapor</span>
-      </button>
-
-      <!-- Tombol Verifikasi Ownership Manual (Sebagai Pelengkap / Alternatif) -->
-      <button
-        @click="handleVerifyOwnership"
-        :disabled="actionLoading || ticket?.status === 'verified'"
-        class="w-full py-3 px-4 bg-brand-orange hover:bg-[#e85b27] disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
         </svg>
-        <span>{{ ticket?.status === 'verified' ? 'Sudah Terverifikasi' : 'Verify Ownership & Claim' }}</span>
-      </button>
+        <span>Resolved &bull; Serah Terima Telah Selesai</span>
+      </div>
 
-      <button
-        @click="handleAction('rejected')"
-        :disabled="actionLoading || ticket?.status === 'rejected'"
-        class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-200 font-semibold text-xs rounded-xl shadow-sm transition-all"
-      >
-        <span>Reject Match</span>
-      </button>
+      <!-- STATE 2: Tiket Masih Open -->
+      <template v-else-if="ticket?.status === 'open'">
+        <!-- JIKA User adalah Pelapor/Pemilik (user.id == ticket.lostItem.user_id): Tampilkan Tombol Tampilkan QR Klaim -->
+        <button
+          v-if="isReporter || isAdmin"
+          type="button"
+          @click="showQrModal = true"
+          :disabled="actionLoading"
+          class="w-full py-3 px-4 bg-brand-teal hover:bg-[#00ad95] disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+          </svg>
+          <span>Tampilkan QR Klaim</span>
+        </button>
+
+        <!-- JIKA User adalah Penemu (user.id == ticket.foundItem.user_id): Tampilkan Tombol Buka Kamera Scanner -->
+        <button
+          v-if="isFinder || isAdmin"
+          type="button"
+          @click="scannerModalOpen = true"
+          :disabled="actionLoading"
+          class="w-full py-3 px-4 bg-brand-teal hover:bg-[#00ad95] disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>Buka Kamera Scanner</span>
+        </button>
+
+        <!-- Tombol Tolak Kecocokan -->
+        <button
+          type="button"
+          @click="handleAction('rejected')"
+          :disabled="actionLoading"
+          class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-600 border border-slate-200 font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+        >
+          <span>Tolak Kecocokan (Reject Match)</span>
+        </button>
+      </template>
+    </div>
+
+    <!-- Modal Tampilkan QR Klaim (Khusus Pelapor/Pemilik) -->
+    <div
+      v-if="showQrModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300"
+    >
+      <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-100 overflow-hidden p-6 text-center space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center gap-2 text-brand-teal">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+            </svg>
+            <h3 class="text-sm font-bold text-navy-900">QR Code Klaim Pelapor</h3>
+          </div>
+          <button @click="showQrModal = false" class="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 inline-block shadow-inner mx-auto">
+          <qrcode-vue
+            :value="ticket?.qr_token || 'nodus-pending-token'"
+            :size="190"
+            level="H"
+            render-as="svg"
+            class="mx-auto"
+          />
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-xs font-bold text-navy-900">Tunjukkan QR ini kepada Penemu</p>
+          <p class="text-[11px] text-text-secondary leading-relaxed">
+            Penemu akan memindai kode QR ini menggunakan kamera scanner pada aplikasinya untuk memverifikasi serah terima secara aman dan menaikkan reputasi Trust Score.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          @click="showQrModal = false"
+          class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+        >
+          Tutup
+        </button>
+      </div>
     </div>
 
     <!-- Modal Pindai QR Code (HTML5 Scanner) -->
@@ -345,10 +426,12 @@ const actionLoading = ref(false);
 const reportModalOpen = ref(false);
 const showReviewModal = ref(false);
 const scannerModalOpen = ref(false);
+const showQrModal = ref(false);
 const miniMapContainer = ref(null);
 let miniMapInstance = null;
 
 const currentUserId = computed(() => store.user?.id);
+const isAdmin = computed(() => store.user?.role === 'admin');
 const messages = computed(() => store.ticketMessages);
 const messagesLoading = computed(() => store.messagesLoading);
 
@@ -396,7 +479,23 @@ async function handleQrScanned(token) {
   if (!token || actionLoading.value || !props.ticket) return;
   actionLoading.value = true;
   try {
-    await store.verifyQrClaimTicket(props.ticket.id, token);
+    const res = await axios.post(`/api/claim-tickets/${props.ticket.id}/verify-qr`, { token });
+
+    // Ubah status lokal tiket menjadi verified agar UI langsung berganti ke Selesai / Resolved
+    if (props.ticket) {
+      props.ticket.status = 'verified';
+    }
+    if (store.activeTicket && store.activeTicket.id === props.ticket.id) {
+      store.activeTicket.status = 'verified';
+    }
+    const foundTicket = store.tickets.find((t) => t.id === props.ticket.id);
+    if (foundTicket) {
+      foundTicket.status = 'verified';
+    }
+
+    store.notify(res.data.message || 'Verifikasi serah terima berhasil! Trust Score Anda meningkat.', 'success');
+    await store.fetchCurrentUser();
+    await store.fetchItems();
 
     // Pemicu acak setelah sukses untuk memunculkan modal ulasan
     if (Math.random() > 0.5) {
@@ -405,26 +504,8 @@ async function handleQrScanned(token) {
       }, 700);
     }
   } catch (err) {
-    // error handled in store
-  } finally {
-    actionLoading.value = false;
-  }
-}
-
-async function handleVerifyOwnership() {
-  if (actionLoading.value || !props.ticket) return;
-  actionLoading.value = true;
-  try {
-    await store.resolveClaimTicket(props.ticket.id);
-
-    // Pemicu 1: Logika acak setelah sukses klaim untuk memunculkan modal ulasan
-    if (Math.random() > 0.5) {
-      setTimeout(() => {
-        showReviewModal.value = true;
-      }, 700);
-    }
-  } catch (err) {
-    // handled in store
+    const errorMsg = err.response?.data?.message || 'Kode QR tidak cocok atau gagal diverifikasi.';
+    store.notify(errorMsg, 'error');
   } finally {
     actionLoading.value = false;
   }
