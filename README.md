@@ -284,13 +284,25 @@ GEMINI_MODEL="gemini-3.5-flash-lite"
 ```
 
 ### Inisialisasi Basis Data & Skenario Awal
-Jalankan migrasi tabel dan penyemaian data skenario terverifikasi:
+Anda dapat memilih salah satu dari dua metode inisialisasi basis data berikut:
 
+#### Opsi A: Menggunakan Artisan Migration & Seeder (Direkomendasikan)
+Jalankan migrasi tabel dan penyemaian data skenario terverifikasi secara otomatis:
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-Data bawaan seeder menyediakan akun pengujian:
+#### Opsi B: Impor Langsung File SQL Dump (`nodus-database.sql`)
+Di root direktori proyek telah disediakan file database dump utuh [nodus-database.sql](nodus-database.sql) yang memuat seluruh definisi skema tabel dan data pengujian skenario terverifikasi:
+```bash
+# 1. Buat database baru di MySQL (jika belum dibuat)
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS nodus_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 2. Impor file nodus-database.sql ke dalam database
+mysql -u root -p nodus_db < nodus-database.sql
+```
+
+Data bawaan seeder maupun dump SQL menyediakan akun pengujian:
 * **Admin / Developer:** `budi@nodus.com` (password: `password`) atau `admin@nodus.com` (password: `password`)
 * **Pengguna Pelapor (Andi):** `andi@nodus.com` (password: `password`)
 * **Pengguna Penemu (Citra):** `citra@nodus.com` (password: `password`)
