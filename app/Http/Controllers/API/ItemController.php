@@ -155,6 +155,7 @@ class ItemController extends Controller
                     'description' => $item->description,
                     'category' => $item->category,
                     'type' => $item->type,
+                    'status' => $item->status,
                     'location_name' => $item->location_name,
                     'image_path' => $item->image_path,
                     'item_date' => $item->item_date instanceof \DateTimeInterface ? $item->item_date->format('Y-m-d') : (string) $item->item_date,
