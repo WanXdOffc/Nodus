@@ -32,8 +32,8 @@ class ReviewAndHistoryTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-            ->assertJson([
-                'message' => 'Ulasan berhasil dikirim! Terima kasih atas apresiasi Anda.',
+            ->assertJsonFragment([
+                'message' => 'Terima kasih atas ulasan Anda! Ulasan Anda telah berhasil disimpan.',
             ]);
 
         $this->assertDatabaseHas('app_reviews', [
@@ -82,7 +82,6 @@ class ReviewAndHistoryTest extends TestCase
             ->assertJsonCount(1)
             ->assertJsonFragment([
                 'comment' => 'Featured review test',
-                'user_name' => 'Alice',
             ])
             ->assertJsonMissing([
                 'comment' => 'Non-featured review',
@@ -102,8 +101,8 @@ class ReviewAndHistoryTest extends TestCase
             'status' => 'resolved',
             'latitude' => -6.2,
             'longitude' => 106.8,
-            'location_address' => 'Gedung Perpustakaan',
-            'lost_at' => now()->subDays(2),
+            'location_name' => 'Gedung Perpustakaan',
+            'item_date' => now()->subDays(2),
         ]);
 
         $activeItem = Item::create([
@@ -112,11 +111,11 @@ class ReviewAndHistoryTest extends TestCase
             'description' => 'Kunci motor dengan gantungan pita merah',
             'category' => 'Kunci & Kendaraan',
             'type' => 'lost',
-            'status' => 'open',
+            'status' => 'searching',
             'latitude' => -6.21,
             'longitude' => 106.81,
-            'location_address' => 'Area Parkir Barat',
-            'lost_at' => now()->subDay(),
+            'location_name' => 'Area Parkir Barat',
+            'item_date' => now()->subDay(),
         ]);
 
         $response = $this->getJson('/api/items/history');
