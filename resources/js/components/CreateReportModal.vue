@@ -244,9 +244,21 @@ const form = ref({
 });
 
 watch(
+  () => props.initialType,
+  (val) => {
+    if (val) {
+      form.value.type = val;
+    }
+  }
+);
+
+watch(
   () => props.modelValue,
   (val) => {
     if (val) {
+      if (props.initialType) {
+        form.value.type = props.initialType;
+      }
       nextTick(() => {
         initMiniMap();
       });

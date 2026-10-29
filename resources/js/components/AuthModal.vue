@@ -35,7 +35,7 @@
           type="button"
           @click="handleGoogleAuth"
           :disabled="loading"
-          class="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-2.5 group"
+          class="w-full py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
         >
           <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -45,6 +45,39 @@
           </svg>
           <span>{{ isRegister ? 'Daftar Cepat dengan Google' : 'Masuk Cepat dengan Google' }}</span>
         </button>
+
+        <!-- Banner jika Google Client ID belum ada di .env -->
+        <div
+          v-if="showGoogleConfigAlert"
+          class="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl text-left space-y-2 animate-fade-in"
+        >
+          <div class="flex items-start gap-2">
+            <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="text-[11px] text-amber-800 leading-relaxed">
+              <p class="font-bold">Google Client ID Belum Terpasang</p>
+              <p class="mt-0.5 text-amber-700">
+                Fitur Google Login telah siap di backend. Untuk login langsung dengan akun Google nyata, masukkan <code class="bg-amber-100 px-1 py-0.5 rounded text-[10px]">GOOGLE_CLIENT_ID</code> pada file <code class="bg-amber-100 px-1 py-0.5 rounded text-[10px]">.env</code>.
+              </p>
+            </div>
+          </div>
+          <div class="pt-1 flex items-center gap-2">
+            <input
+              v-model="customClientId"
+              type="text"
+              placeholder="Atau tempel Google Client ID di sini..."
+              class="flex-1 px-2.5 py-1 text-[11px] rounded-lg border border-amber-300 bg-white focus:outline-none focus:border-brand-teal"
+            />
+            <button
+              type="button"
+              @click="triggerGoogleLoginWithCustomId"
+              class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold shadow-xs transition-colors"
+            >
+              Coba Login
+            </button>
+          </div>
+        </div>
 
         <div class="relative flex py-1 items-center">
           <div class="flex-grow border-t border-slate-200"></div>
@@ -62,7 +95,7 @@
         <button
           type="button"
           @click="fillDemoAccount"
-          class="px-3 py-1 bg-brand-teal hover:bg-[#00ab94] text-white text-[11px] font-bold rounded-xl shadow-xs transition-colors"
+          class="px-3 py-1 bg-brand-teal hover:bg-[#00ab94] text-white text-[11px] font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
         >
           Gunakan Demo
         </button>
@@ -106,7 +139,7 @@
         <button
           type="submit"
           :disabled="loading"
-          class="w-full mt-2 py-3 bg-brand-teal hover:bg-[#00ad95] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+          class="w-full mt-2 py-3 bg-brand-teal hover:bg-[#00ad95] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -123,7 +156,7 @@
         <button
           type="button"
           @click="isRegister = !isRegister"
-          class="text-brand-teal font-bold hover:underline"
+          class="text-brand-teal font-bold hover:underline cursor-pointer"
         >
           {{ isRegister ? 'Masuk di sini' : 'Daftar sekarang' }}
         </button>
@@ -133,8 +166,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 import { useAppStore } from '@/store/appStore';
 
 const props = defineProps({
@@ -157,9 +191,48 @@ const form = ref({
   password: '',
 });
 
+const googleConfig = ref({
+  configured: false,
+  client_id: null,
+});
+const showGoogleConfigAlert = ref(false);
+const customClientId = ref('');
+
+onMounted(() => {
+  fetchGoogleConfig();
+});
+
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (val) {
+      fetchGoogleConfig();
+    }
+  }
+);
+
+async function fetchGoogleConfig() {
+  try {
+    const res = await axios.get('/api/auth/google/config');
+    googleConfig.value = res.data;
+  } catch (err) {
+    console.error('Failed to load Google Auth config:', err);
+  }
+}
+
 function fillDemoAccount() {
   form.value.email = 'admin@nodus.com';
   form.value.password = 'password';
+}
+
+function redirectToNextPage() {
+  const pendingReport = sessionStorage.getItem('nodus_redirect_report');
+  if (pendingReport) {
+    sessionStorage.removeItem('nodus_redirect_report');
+    router.push({ path: '/dashboard', query: { report: pendingReport } });
+  } else {
+    router.push('/dashboard');
+  }
 }
 
 async function handleSubmit() {
@@ -171,6 +244,7 @@ async function handleSubmit() {
       await store.login(form.value.email, form.value.password);
     }
     emit('update:modelValue', false);
+    redirectToNextPage();
   } catch (err) {
     // error handled in store
   } finally {
@@ -179,24 +253,60 @@ async function handleSubmit() {
 }
 
 async function handleGoogleAuth() {
-  loading.value = true;
-  try {
-    const googleEmail = 'google.user@nodus.com';
-    const googlePassword = 'google_verified_auth';
-    const googleName = 'Pengguna Google NODUS';
+  const clientId = googleConfig.value.client_id || customClientId.value;
 
-    try {
-      await store.login(googleEmail, googlePassword);
-    } catch {
-      await store.register(googleName, googleEmail, googlePassword);
-    }
-    store.notify('Berhasil masuk dengan akun Google!', 'success');
-    emit('update:modelValue', false);
-    router.push('/dashboard');
+  if (!clientId) {
+    showGoogleConfigAlert.value = !showGoogleConfigAlert.value;
+    return;
+  }
+
+  executeGoogleTokenClient(clientId);
+}
+
+function triggerGoogleLoginWithCustomId() {
+  if (!customClientId.value.trim()) {
+    store.notify('Harap masukkan Google Client ID terlebih dahulu.', 'error');
+    return;
+  }
+  executeGoogleTokenClient(customClientId.value.trim());
+}
+
+function executeGoogleTokenClient(clientId) {
+  if (!window.google?.accounts?.oauth2) {
+    store.notify('Google Identity Services SDK sedang dimuat, silakan coba 2 detik lagi.', 'info');
+    return;
+  }
+
+  try {
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'email profile openid',
+      callback: async (response) => {
+        if (response.error) {
+          store.notify('Autentikasi Google dibatalkan atau gagal.', 'error');
+          return;
+        }
+
+        if (response.access_token) {
+          loading.value = true;
+          try {
+            await store.loginWithGoogle({
+              access_token: response.access_token,
+            });
+            emit('update:modelValue', false);
+            redirectToNextPage();
+          } catch (err) {
+            // error handled in store
+          } finally {
+            loading.value = false;
+          }
+        }
+      },
+    });
+
+    tokenClient.requestAccessToken();
   } catch (err) {
-    store.notify('Gagal menghubungkan ke Google.', 'error');
-  } finally {
-    loading.value = false;
+    store.notify('Terjadi kesalahan saat memulai Google Login: ' + err.message, 'error');
   }
 }
 </script>

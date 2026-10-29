@@ -120,6 +120,20 @@ export const useAppStore = defineStore('app', {
       }
     },
 
+    async loginWithGoogle(payload) {
+      try {
+        const res = await axios.post('/api/auth/google', payload);
+        const token = res.data.access_token || res.data.token;
+        this.setAuth(res.data.user, token);
+        this.notify(res.data.message || 'Login Google berhasil!', 'success');
+        return res.data;
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Login Google gagal.';
+        this.notify(msg, 'error');
+        throw err;
+      }
+    },
+
     async logout() {
       try {
         if (this.token) {

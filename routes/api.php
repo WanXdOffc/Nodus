@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ClaimTicketController;
+use App\Http\Controllers\API\GoogleAuthController;
 use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\PublicApiController;
 use App\Http\Controllers\API\ReviewController;
@@ -21,6 +22,9 @@ use Illuminate\Support\Facades\Route;
 // Public Authentication Routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/auth/google/config', [GoogleAuthController::class, 'config']);
+Route::post('/auth/google', [GoogleAuthController::class, 'authenticate']);
+
 
 // Public Items Browsing & History
 Route::get('/items', [ItemController::class, 'index']);

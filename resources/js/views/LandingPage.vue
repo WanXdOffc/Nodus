@@ -29,29 +29,33 @@
               Temukan barang hilang atau bantu kembalikan barang temuan secara cepat dan terverifikasi. Didukung teknologi AI Gemini dan geolokasi pintar untuk akurasi pencocokan maksimal.
             </p>
 
-            <!-- Dua Tombol CTA -->
+            <!-- Dua Tombol CTA Menuju Dashboard / Lapor -->
             <div class="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
               <!-- Tombol Lapor Kehilangan (Orange) -->
-              <a
-                href="#lapor-kehilangan"
-                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-[#e85b27] text-white font-semibold px-8 py-3.5 rounded-full shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:-translate-y-0.5 transition-all duration-200"
+              <button
+                type="button"
+                id="btn-lapor-kehilangan"
+                @click="handleActionClick('lost')"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-[#e85b27] text-white font-semibold px-8 py-3.5 rounded-full shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
                 <span>Lapor Kehilangan</span>
-              </a>
+              </button>
 
               <!-- Tombol Lapor Ditemukan (Outline Teal) -->
-              <a
-                href="#lapor-ditemukan"
-                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-brand-teal text-brand-teal hover:bg-mint-wash font-semibold px-8 py-3.5 rounded-full bg-white transition-all duration-200"
+              <button
+                type="button"
+                id="btn-lapor-ditemukan"
+                @click="handleActionClick('found')"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-brand-teal text-brand-teal hover:bg-mint-wash font-semibold px-8 py-3.5 rounded-full bg-white transition-all duration-200 cursor-pointer"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 <span>Lapor Ditemukan</span>
-              </a>
+              </button>
             </div>
 
             <!-- Trust highlights -->
@@ -690,13 +694,26 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import { useAppStore } from '@/store/appStore';
 import Navbar from '@/components/Navbar.vue';
 import AuthModal from '@/components/AuthModal.vue';
 
 const route = useRoute();
+const router = useRouter();
+const store = useAppStore();
 const authModalOpen = ref(false);
+
+function handleActionClick(type) {
+  const token = store.token || localStorage.getItem('nodus_token');
+  if (token) {
+    router.push({ path: '/dashboard', query: { report: type } });
+  } else {
+    sessionStorage.setItem('nodus_redirect_report', type);
+    authModalOpen.value = true;
+  }
+}
 
 const historyItems = ref([]);
 const historyLoading = ref(true);

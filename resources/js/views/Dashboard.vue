@@ -184,24 +184,35 @@
       v-model="reportModalOpen"
       :target-user="activeReportUser"
     />
+
+    <!-- Modal Buat Laporan Barang (Kehilangan / Ditemukan) -->
+    <CreateReportModal
+      v-model="showCreateReportModal"
+      :initial-type="initialReportType"
+      @created="handleReportCreated"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAppStore } from '@/store/appStore';
 import Sidebar from '@/components/Sidebar.vue';
 import MapWidget from '@/components/MapWidget.vue';
 import ItemCard from '@/components/ItemCard.vue';
 import SecureClaimTicketPanel from '@/components/SecureClaimTicketPanel.vue';
 import ReportUserModal from '@/components/ReportUserModal.vue';
+import CreateReportModal from '@/components/CreateReportModal.vue';
 
 const store = useAppStore();
 const router = useRouter();
+const route = useRoute();
 
 const activeMenu = ref('dashboard');
 const reportModalOpen = ref(false);
+const showCreateReportModal = ref(false);
+const initialReportType = ref('lost');
 
 const activeReportUser = computed(() => {
   if (store.activeTicket) {
@@ -230,7 +241,36 @@ onMounted(async () => {
 
   // Hubungkan status tiket yang ada ke item cards
   enrichItemsWithTicketMatches();
+
+  // Buka modal laporan jika diarahkan dengan query atau session
+  checkPendingReport();
 });
+
+function checkPendingReport() {
+  const targetReport = route.query.report || sessionStorage.getItem('nodus_redirect_report');
+  if (targetReport === 'lost' || targetReport === 'found') {
+    sessionStorage.removeItem('nodus_redirect_report');
+    initialReportType.value = targetReport;
+    showCreateReportModal.value = true;
+  }
+}
+
+watch(
+  () => route.query.report,
+  (val) => {
+    if (val === 'lost' || val === 'found') {
+      initialReportType.value = val;
+      showCreateReportModal.value = true;
+    }
+  }
+);
+
+async function handleReportCreated() {
+  await store.fetchItems();
+  await store.fetchClaimTickets();
+  enrichItemsWithTicketMatches();
+  store.notify('Laporan barang Anda berhasil dipublikasikan!', 'success');
+}
 
 function enrichItemsWithTicketMatches() {
   if (!store.tickets.length || !store.items.length) return;
