@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/claim-tickets', [ClaimTicketController::class, 'index']);
     Route::get('/claim-tickets/{claimTicket}', [ClaimTicketController::class, 'show']);
     Route::post('/claim-tickets/{id}/resolve', [ClaimTicketController::class, 'resolveTicket']);
+    Route::post('/claim-tickets/{id}/verify-qr', [ClaimTicketController::class, 'verifyQr']);
     Route::patch('/claim-tickets/{claimTicket}', [ClaimTicketController::class, 'update']);
     Route::put('/claim-tickets/{claimTicket}', [ClaimTicketController::class, 'update']);
 

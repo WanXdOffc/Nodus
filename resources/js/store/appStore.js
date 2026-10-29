@@ -277,6 +277,30 @@ export const useAppStore = defineStore('app', {
       }
     },
 
+    async verifyQrClaimTicket(ticketId, token) {
+      const id = ticketId || this.activeTicket?.id;
+      if (!id) return;
+      try {
+        const res = await axios.post(`/api/claim-tickets/${id}/verify-qr`, { token });
+        if (this.activeTicket && this.activeTicket.id === id) {
+          this.activeTicket.status = 'verified';
+        }
+        const foundTicket = this.tickets.find((t) => t.id === id);
+        if (foundTicket) {
+          foundTicket.status = 'verified';
+        }
+
+        this.notify(res.data.message || 'Verifikasi serah terima berhasil! Trust Score Anda meningkat.', 'success');
+        await this.fetchCurrentUser();
+        await this.fetchItems();
+        return res.data;
+      } catch (err) {
+        const errorMsg = err.response?.data?.message || 'Kode QR tidak cocok atau gagal diverifikasi.';
+        this.notify(errorMsg, 'error');
+        throw err;
+      }
+    },
+
     async createItem(formData) {
       try {
         const res = await axios.post('/api/items', formData, {
