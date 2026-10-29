@@ -49,9 +49,12 @@ class UserResource extends Resource
                     ->numeric()
                     ->step(0.1)
                     ->minValue(0)
-                    ->maxValue(9.9)
+                    ->maxValue(10.0)
                     ->default(5.0)
                     ->required(),
+                Forms\Components\Toggle::make('is_banned')
+                    ->label('Diblokir (Banned)')
+                    ->default(false),
             ]);
     }
 
@@ -77,6 +80,10 @@ class UserResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('trust_score')
                     ->label('Trust Score')
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_banned')
+                    ->label('Banned')
+                    ->boolean()
                     ->sortable(),
             ])
             ->filters([

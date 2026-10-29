@@ -59,6 +59,12 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if ($user->is_banned) {
+            return response()->json([
+                'message' => 'Akun Anda telah diblokir karena terindikasi melakukan pelanggaran atau penipuan.',
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
