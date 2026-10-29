@@ -1,7 +1,10 @@
 <template>
   <div class="min-h-screen bg-surface-white font-sans text-text-primary selection:bg-brand-teal selection:text-white">
     <!-- Navbar Melayang -->
-    <Navbar />
+    <Navbar @open-login="authModalOpen = true" />
+
+    <!-- Auth Modal -->
+    <AuthModal v-model="authModalOpen" />
 
     <!-- Hero Section -->
     <section id="hero" class="relative pt-32 sm:pt-40 pb-20 sm:pb-28 overflow-hidden">
@@ -360,5 +363,26 @@
 </template>
 
 <script setup>
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import Navbar from '@/components/Navbar.vue';
+import AuthModal from '@/components/AuthModal.vue';
+
+const route = useRoute();
+const authModalOpen = ref(false);
+
+onMounted(() => {
+  if (route.query.login === '1') {
+    authModalOpen.value = true;
+  }
+});
+
+watch(
+  () => route.query.login,
+  (val) => {
+    if (val === '1') {
+      authModalOpen.value = true;
+    }
+  }
+);
 </script>

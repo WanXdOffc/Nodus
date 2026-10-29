@@ -36,12 +36,22 @@
 
         <!-- Sisi Kanan: Aksi (Login & Tombol Portal Teal) -->
         <div class="hidden sm:flex items-center gap-3">
-          <a
-            href="#login"
+          <router-link
+            v-if="store.isAuthenticated"
+            to="/dashboard"
+            class="text-sm font-semibold text-brand-teal hover:text-navy-900 px-3 py-2 transition-colors flex items-center gap-1.5"
+          >
+            <span class="w-2 h-2 rounded-full bg-brand-teal animate-pulse"></span>
+            <span>Dashboard</span>
+          </router-link>
+          <button
+            v-else
+            type="button"
+            @click="$emit('open-login')"
             class="text-sm font-semibold text-slate-700 hover:text-brand-teal px-3 py-2 transition-colors"
           >
             Login
-          </a>
+          </button>
           <a
             href="/admin"
             class="inline-flex items-center gap-1.5 bg-brand-teal hover:bg-[#00ab94] text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-sm hover:shadow transition-all duration-200"
@@ -104,12 +114,22 @@
             Keamanan
           </a>
           <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <a
-              href="#login"
+            <router-link
+              v-if="store.isAuthenticated"
+              to="/dashboard"
+              @click="mobileMenuOpen = false"
+              class="text-sm font-semibold text-brand-teal px-3 py-2"
+            >
+              Dashboard
+            </router-link>
+            <button
+              v-else
+              type="button"
+              @click="mobileMenuOpen = false; $emit('open-login')"
               class="text-sm font-semibold text-slate-700 px-3 py-2"
             >
               Login
-            </a>
+            </button>
             <a
               href="/admin"
               class="inline-flex items-center gap-1.5 bg-brand-teal text-white text-sm font-medium px-5 py-2 rounded-full"
@@ -128,6 +148,9 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useAppStore } from '@/store/appStore';
 
+defineEmits(['open-login']);
+const store = useAppStore();
 const mobileMenuOpen = ref(false);
 </script>
