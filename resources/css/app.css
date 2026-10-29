@@ -4,7 +4,10 @@
 @layer base {
     :root {
         --color-brand-teal: #00C2A8;
+        --color-brand-orange: #FF6B35;
         --color-dark-slate: #1B2A33;
+        --color-navy-900: #1B2A33;
+        --color-dark-navy: #1B2A33;
         --color-mint-wash: #E6F7F5;
         --color-surface-white: #FFFFFF;
         --color-text-primary: #222222;
@@ -15,7 +18,10 @@
 
 @theme {
     --color-brand-teal: #00C2A8;
+    --color-brand-orange: #FF6B35;
     --color-dark-slate: #1B2A33;
+    --color-navy-900: #1B2A33;
+    --color-dark-navy: #1B2A33;
     --color-mint-wash: #E6F7F5;
     --color-surface-white: #FFFFFF;
     --color-text-primary: #222222;

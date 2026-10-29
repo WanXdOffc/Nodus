@@ -4,6 +4,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\ClaimTicketController;
 use App\Http\Controllers\API\ItemController;
 use App\Http\Controllers\API\TicketMessageController;
+use App\Http\Controllers\API\UserReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,9 +36,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Claim Tickets
     Route::get('/claim-tickets', [ClaimTicketController::class, 'index']);
     Route::get('/claim-tickets/{claimTicket}', [ClaimTicketController::class, 'show']);
+    Route::patch('/claim-tickets/{claimTicket}', [ClaimTicketController::class, 'update']);
+    Route::put('/claim-tickets/{claimTicket}', [ClaimTicketController::class, 'update']);
 
     // Secure Claim Ticket Chat Messages
     Route::get('/claim-tickets/{claimTicket}/messages', [TicketMessageController::class, 'index']);
     Route::post('/claim-tickets/{claimTicket}/messages', [TicketMessageController::class, 'store']);
     Route::delete('/claim-tickets/{claimTicket}/messages/{ticketMessage}', [TicketMessageController::class, 'destroy']);
+
+    // User Reports
+    Route::post('/user-reports', [UserReportController::class, 'store']);
 });
