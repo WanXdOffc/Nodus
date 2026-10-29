@@ -16,6 +16,7 @@ class ClaimTicket extends Model
         'found_item_id',
         'ai_match_score',
         'status',
+        'admin_status',
     ];
 
     protected function casts(): array

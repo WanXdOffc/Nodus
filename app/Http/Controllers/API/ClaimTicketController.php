@@ -17,10 +17,11 @@ class ClaimTicketController extends Controller
     {
         $userId = $request->user()->id;
 
-        $tickets = ClaimTicket::where(function ($query) use ($userId) {
-            $query->whereHas('lostItem', fn ($q) => $q->where('user_id', $userId))
-                ->orWhereHas('foundItem', fn ($q) => $q->where('user_id', $userId));
-        })
+        $tickets = ClaimTicket::where('admin_status', 'approved')
+            ->where(function ($query) use ($userId) {
+                $query->whereHas('lostItem', fn ($q) => $q->where('user_id', $userId))
+                    ->orWhereHas('foundItem', fn ($q) => $q->where('user_id', $userId));
+            })
             ->with([
                 'lostItem.user:id,name,trust_score',
                 'foundItem.user:id,name,trust_score',
@@ -45,6 +46,12 @@ class ClaimTicketController extends Controller
         if (! $isOwner && ! $request->user()->isAdmin()) {
             return response()->json([
                 'message' => 'Anda tidak memiliki hak akses untuk melihat tiket klaim ini.',
+            ], 403);
+        }
+
+        if ($claimTicket->admin_status !== 'approved' && ! $request->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Tiket klaim ini belum disetujui atau masih dalam proses moderasi admin.',
             ], 403);
         }
 
