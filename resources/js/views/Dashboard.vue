@@ -179,70 +179,11 @@
       </div>
     </aside>
 
-    <!-- Modal Report User -->
-    <div
-      v-if="reportModalOpen"
-      class="fixed inset-0 z-50 bg-navy-900/40 backdrop-blur-xs flex items-center justify-center p-4"
-    >
-      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-bold text-navy-900 flex items-center gap-2">
-            <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-            Laporkan Pengguna (Report User)
-          </h3>
-          <button @click="reportModalOpen = false" class="text-slate-400 hover:text-slate-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-
-        <p class="text-xs text-text-secondary">
-          Bantu kami menjaga keamanan komunitas Nodus. Laporan Anda akan ditinjau langsung oleh tim admin.
-        </p>
-
-        <form @submit.prevent="submitReport" class="space-y-3.5">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">ID Pengguna yang Dilaporkan</label>
-            <input
-              v-model="reportForm.reported_user_id"
-              type="number"
-              placeholder="Contoh: 2"
-              required
-              class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-brand-teal"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">Alasan Pelaporan</label>
-            <textarea
-              v-model="reportForm.reason"
-              rows="3"
-              placeholder="Jelaskan indikasi penipuan, klaim palsu, atau perilaku tidak pantas..."
-              required
-              class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-brand-teal"
-            ></textarea>
-          </div>
-
-          <div class="flex items-center justify-end gap-2 pt-2">
-            <button
-              type="button"
-              @click="reportModalOpen = false"
-              class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              :disabled="reportSubmitting"
-              class="px-5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 rounded-xl shadow-sm"
-            >
-              Kirim Laporan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Modal Report User (Anti-ID-Hafal & Bukti Gambar) -->
+    <ReportUserModal
+      v-model="reportModalOpen"
+      :target-user="activeReportUser"
+    />
   </div>
 </template>
 
@@ -254,16 +195,23 @@ import Sidebar from '@/components/Sidebar.vue';
 import MapWidget from '@/components/MapWidget.vue';
 import ItemCard from '@/components/ItemCard.vue';
 import SecureClaimTicketPanel from '@/components/SecureClaimTicketPanel.vue';
+import ReportUserModal from '@/components/ReportUserModal.vue';
 
 const store = useAppStore();
 const router = useRouter();
 
 const activeMenu = ref('dashboard');
 const reportModalOpen = ref(false);
-const reportSubmitting = ref(false);
-const reportForm = ref({
-  reported_user_id: '',
-  reason: '',
+
+const activeReportUser = computed(() => {
+  if (store.activeTicket) {
+    const currentId = store.user?.id;
+    if (store.activeTicket.lost_item?.user_id === currentId) {
+      return store.activeTicket.found_item?.user;
+    }
+    return store.activeTicket.lost_item?.user;
+  }
+  return null;
 });
 
 const userInitial = computed(() => {
@@ -313,34 +261,7 @@ async function handleSelectItem(item) {
 }
 
 function openReportModal() {
-  // Otomatis isi ID target jika sedang melihat tiket
-  if (store.activeTicket) {
-    const currentId = store.user?.id;
-    const targetUser = store.activeTicket.lost_item?.user_id === currentId
-      ? store.activeTicket.found_item?.user_id
-      : store.activeTicket.lost_item?.user_id;
-    if (targetUser) {
-      reportForm.value.reported_user_id = targetUser;
-    }
-  }
   reportModalOpen.value = true;
-}
-
-async function submitReport() {
-  if (!reportForm.value.reported_user_id || !reportForm.value.reason) return;
-  reportSubmitting.value = true;
-  try {
-    await store.submitUserReport(
-      reportForm.value.reported_user_id,
-      reportForm.value.reason
-    );
-    reportForm.value = { reported_user_id: '', reason: '' };
-    reportModalOpen.value = false;
-  } catch (err) {
-    // error handled in store
-  } finally {
-    reportSubmitting.value = false;
-  }
 }
 
 async function handleLogout() {

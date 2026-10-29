@@ -31,8 +31,24 @@ class TicketMessageController extends Controller
             ->oldest()
             ->get();
 
+        $lostUser = $claimTicket->lostItem?->user;
+        $foundUser = $claimTicket->foundItem?->user;
+        $counterpart = ($claimTicket->lostItem?->user_id === $userId) ? $foundUser : $lostUser;
+
         return response()->json([
             'messages' => $messages,
+            'ticket' => [
+                'id' => $claimTicket->id,
+                'status' => $claimTicket->status,
+                'ai_match_score' => $claimTicket->ai_match_score,
+                'lost_item' => $claimTicket->lostItem,
+                'found_item' => $claimTicket->foundItem,
+                'counterpart_user' => $counterpart ? [
+                    'id' => $counterpart->id,
+                    'name' => $counterpart->name,
+                    'trust_score' => $counterpart->trust_score,
+                ] : null,
+            ],
         ]);
     }
 
