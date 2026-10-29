@@ -268,6 +268,7 @@ class ItemController extends Controller
                     [
                         'ai_match_score' => $score,
                         'status' => 'open',
+                        'admin_status' => 'pending',
                     ]
                 );
 

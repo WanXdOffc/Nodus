@@ -178,14 +178,16 @@ class ItemAndAiMatchingTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonPath('matched_tickets_count', 1);
 
-        // Assert ClaimTicket was created
+        // Assert ClaimTicket was created with pending admin_status
         $this->assertDatabaseHas('claim_tickets', [
             'lost_item_id' => $lostItem->id,
             'status' => 'open',
+            'admin_status' => 'pending',
         ]);
 
         $ticket = ClaimTicket::where('lost_item_id', $lostItem->id)->first();
         $this->assertNotNull($ticket);
+        $this->assertEquals('pending', $ticket->admin_status);
         $this->assertGreaterThanOrEqual(60, $ticket->ai_match_score);
     }
 
@@ -248,13 +250,21 @@ class ItemAndAiMatchingTest extends TestCase
             'found_item_id' => $found->id,
             'ai_match_score' => 100,
             'status' => 'open',
+            'admin_status' => 'pending',
         ]);
 
         $token1 = $user1->createToken('u1')->plainTextToken;
         $token2 = $user2->createToken('u2')->plainTextToken;
         $token3 = $user3->createToken('u3')->plainTextToken;
 
-        // User 1 sees the ticket
+        // User 1 cannot see ticket when admin_status is pending
+        $resPending = $this->withHeader('Authorization', 'Bearer ' . $token1)->getJson('/api/claim-tickets');
+        $resPending->assertStatus(200)->assertJsonPath('total', 0);
+
+        // Admin approves the ticket
+        $ticket->update(['admin_status' => 'approved']);
+
+        // User 1 now sees the approved ticket
         $res1 = $this->withHeader('Authorization', 'Bearer ' . $token1)->getJson('/api/claim-tickets');
         $res1->assertStatus(200)->assertJsonPath('total', 1);
 
