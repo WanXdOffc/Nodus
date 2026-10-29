@@ -44,6 +44,13 @@
             >
               Temuan
             </button>
+            <button
+              @click="activeFilter = 'charity'"
+              class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
+              :class="activeFilter === 'charity' ? 'bg-slate-700 text-white' : 'text-slate-600 hover:bg-slate-100'"
+            >
+              Charity
+            </button>
           </div>
 
           <button
@@ -84,7 +91,12 @@
           <div
             v-for="item in filteredMyItems"
             :key="item.id"
-            class="bg-white rounded-3xl p-5 border border-slate-200/70 shadow-xs hover:shadow-card transition-all flex flex-col justify-between space-y-4"
+            class="rounded-3xl p-5 border transition-all flex flex-col justify-between space-y-4"
+            :class="[
+              item.status === 'expired_charity'
+                ? 'bg-slate-50/90 border-slate-300 shadow-sm ring-1 ring-slate-200'
+                : 'bg-white border-slate-200/70 shadow-xs hover:shadow-card'
+            ]"
           >
             <div class="space-y-3">
               <div class="flex items-center justify-between">
@@ -95,16 +107,34 @@
                   {{ item.type === 'lost' ? 'Kehilangan' : 'Ditemukan' }}
                 </span>
 
+                <!-- Badge Status Abu-Abu untuk Expired Charity -->
                 <span
-                  class="text-[10px] font-semibold px-2 py-0.5 rounded-md"
+                  class="text-[10px] font-semibold px-2.5 py-0.5 rounded-md"
                   :class="[
+                    item.status === 'expired_charity' ? 'bg-slate-200 text-slate-700 border border-slate-300 font-bold' :
                     item.status === 'matched' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                     item.status === 'resolved' ? 'bg-slate-100 text-slate-500' :
                     'bg-sky-50 text-sky-600 border border-sky-200'
                   ]"
                 >
-                  {{ item.status.toUpperCase() }}
+                  {{ item.status === 'expired_charity' ? 'EXPIRED CHARITY' : item.status.toUpperCase() }}
                 </span>
+              </div>
+
+              <!-- Peringatan Khusus untuk Barang Expired Charity -->
+              <div
+                v-if="item.status === 'expired_charity'"
+                class="p-3.5 bg-slate-200/80 border border-slate-300/90 rounded-2xl flex items-start gap-2.5 text-xs text-slate-800 leading-relaxed shadow-xs"
+              >
+                <div class="w-6 h-6 rounded-lg bg-slate-300 text-slate-700 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold">
+                  ⚠️
+                </div>
+                <div>
+                  <span class="font-bold block text-slate-900 text-[11px] mb-0.5">Program Donasi &amp; Charity</span>
+                  <p class="text-[11px] text-slate-700 leading-normal">
+                    Masa pencarian 30 hari habis. Tolong serahkan barang ini ke Drop Point NODUS (Satpam Kampus) untuk program Charity.
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -182,7 +212,7 @@ onMounted(async () => {
   if (!store.user) {
     await store.fetchCurrentUser();
   }
-  await store.fetchItems();
+  await store.fetchItems({ user_id: store.user?.id, include_expired: true });
   loading.value = false;
 });
 
@@ -194,6 +224,7 @@ const myItems = computed(() => {
 
 const filteredMyItems = computed(() => {
   if (activeFilter.value === 'all') return myItems.value;
+  if (activeFilter.value === 'charity') return myItems.value.filter((i) => i.status === 'expired_charity');
   return myItems.value.filter((i) => i.type === activeFilter.value);
 });
 
@@ -204,6 +235,6 @@ function formatDate(dateStr) {
 }
 
 function handleItemCreated() {
-  store.fetchItems();
+  store.fetchItems({ user_id: store.user?.id, include_expired: true });
 }
 </script>
