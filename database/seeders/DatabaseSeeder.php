@@ -2,288 +2,184 @@
 
 namespace Database\Seeders;
 
+use App\Models\AppReview;
+use App\Models\ClaimTicket;
+use App\Models\Item;
+use App\Models\TicketMessage;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Seed the application's database with verified scenario data.
      */
     public function run(): void
     {
-        // Buat akun Admin Nodus
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@nodus.com'],
+        // ========================================================
+        // 1. Tiga User Utama (Budi: Developer & Admin, Andi, Citra)
+        // ========================================================
+        $budi = User::updateOrCreate(
+            ['email' => 'budi@nodus.com'],
             [
-                'name' => 'Admin Nodus',
+                'name' => 'Budi Developer',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
+                'is_developer' => true,
                 'trust_score' => 5.0,
             ]
         );
 
-        // Buat akun User Penemu
-        $finder = User::updateOrCreate(
-            ['email' => 'finder@nodus.com'],
+        // Akun admin alias untuk kemudahan demo login
+        User::updateOrCreate(
+            ['email' => 'admin@nodus.com'],
             [
-                'name' => 'Made Aryasuta',
+                'name' => 'Budi Developer (Admin)',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'is_developer' => true,
+                'trust_score' => 5.0,
+            ]
+        );
+
+        $andi = User::updateOrCreate(
+            ['email' => 'andi@nodus.com'],
+            [
+                'name' => 'Andi Pratama',
                 'password' => Hash::make('password'),
                 'role' => 'user',
+                'is_developer' => false,
                 'trust_score' => 4.9,
             ]
         );
 
-        // 1. Barang Hilang (Matched)
-        $lostWallet = \App\Models\Item::updateOrCreate(
+        $citra = User::updateOrCreate(
+            ['email' => 'citra@nodus.com'],
+            [
+                'name' => 'Citra Lestari',
+                'password' => Hash::make('password'),
+                'role' => 'user',
+                'is_developer' => false,
+                'trust_score' => 5.0,
+            ]
+        );
+
+        // ========================================================
+        // 2. Tepat 3 Laporan Barang (Items)
+        // ========================================================
+
+        // Laporan 1: Kunci Motor Honda Vario 160 Smartkey (type: lost), lokasi Pantai Penimbangan, status: searching (belum ada yang menemukan)
+        $itemKunci = Item::updateOrCreate(
+            ['title' => 'Kunci Motor Honda Vario 160 Smartkey'],
+            [
+                'user_id' => $budi->id,
+                'type' => 'lost',
+                'description' => 'Kunci remote smartkey Honda Vario 160 warna hitam dengan gantungan karet biru, terjatuh di area parkiran Pantai Penimbangan.',
+                'category' => 'Kunci & Kendaraan',
+                'latitude' => -8.106500,
+                'longitude' => 115.068200,
+                'location_name' => 'Pantai Penimbangan, Singaraja',
+                'item_date' => now()->subDays(2)->format('Y-m-d'),
+                'status' => 'searching',
+                'ai_tags' => ['kunci', 'vario', 'smartkey', 'honda', 'pantai penimbangan'],
+            ]
+        );
+
+        // Laporan 2: Dompet Kulit Braun Buffel Hitam (type: lost) milik Andi
+        $itemDompetAndi = Item::updateOrCreate(
             ['title' => 'Dompet Kulit Braun Buffel Hitam'],
             [
-                'user_id' => $admin->id,
+                'user_id' => $andi->id,
                 'type' => 'lost',
-                'description' => 'Dompet kulit lipat hitam merk Braun Buffel, berisi KTP atas nama Admin Nodus dan kartu mahasiswa.',
-                'category' => 'Dompet & Aksesoris',
-                'latitude' => -8.1145,
-                'longitude' => 115.0875,
+                'description' => 'Dompet lipat bahan kulit warna hitam merk Braun Buffel, berisi KTP dan kartu identitas mahasiswa atas nama Andi Pratama.',
+                'category' => 'Dompet & Tas',
+                'latitude' => -8.114500,
+                'longitude' => 115.087500,
                 'location_name' => 'Taman Kota Singaraja',
                 'item_date' => now()->subDay()->format('Y-m-d'),
                 'status' => 'matched',
-                'ai_tags' => ['dompet', 'kulit', 'hitam', 'braun buffel', 'ktp'],
+                'ai_tags' => ['dompet', 'kulit', 'hitam', 'braun buffel', 'kartu identitas'],
             ]
         );
 
-        // 2. Barang Temuan (Matched)
-        $foundWallet = \App\Models\Item::updateOrCreate(
+        // Laporan 3: Dompet Lipat Kulit Pria (type: found) milik Citra
+        $itemDompetCitra = Item::updateOrCreate(
             ['title' => 'Dompet Lipat Kulit Pria'],
             [
-                'user_id' => $finder->id,
+                'user_id' => $citra->id,
                 'type' => 'found',
                 'description' => 'Ditemukan dompet lipat kulit warna hitam di bangku utara Taman Kota Singaraja dekat air mancur.',
-                'category' => 'Dompet & Aksesoris',
-                'latitude' => -8.1147,
-                'longitude' => 115.0876,
+                'category' => 'Dompet & Tas',
+                'latitude' => -8.114700,
+                'longitude' => 115.087600,
                 'location_name' => 'Taman Kota Singaraja',
                 'item_date' => now()->subDay()->format('Y-m-d'),
                 'status' => 'matched',
-                'ai_tags' => ['dompet', 'kulit', 'hitam', 'pria', 'taman kota'],
+                'ai_tags' => ['dompet', 'kulit', 'hitam', 'lipat', 'pria', 'taman kota'],
             ]
         );
 
-        // 3. Claim Ticket dengan AI Match 95%
-        $ticket = \App\Models\ClaimTicket::updateOrCreate(
+        // ========================================================
+        // 3. Skenario AI Match: Hubungkan Laporan 2 & 3 di claim_tickets
+        // ========================================================
+        $ticket = ClaimTicket::updateOrCreate(
             [
-                'lost_item_id' => $lostWallet->id,
-                'found_item_id' => $foundWallet->id,
+                'lost_item_id' => $itemDompetAndi->id,
+                'found_item_id' => $itemDompetCitra->id,
             ],
             [
                 'ai_match_score' => 95,
                 'status' => 'open',
+                'admin_status' => 'approved',
+                'qr_token' => (string) Str::uuid(),
             ]
         );
 
-        // 4. Ticket Messages
-        \App\Models\TicketMessage::updateOrCreate(
+        // Percakapan Verifikasi Aman di dalam Tiket Klaim
+        TicketMessage::updateOrCreate(
             [
                 'ticket_id' => $ticket->id,
-                'user_id' => $finder->id,
-                'message' => 'Halo! Saya menemukan dompet kulit hitam di area Taman Kota kemarin sore. Apakah ada ciri khusus di dalamnya?',
+                'user_id' => $citra->id,
+                'message' => 'Halo Kak Andi! Saya menemukan dompet kulit Braun Buffel hitam ini di bangku Taman Kota kemarin sore. Apakah ada kartu identitas di dalamnya?',
             ]
         );
 
-        \App\Models\TicketMessage::updateOrCreate(
+        TicketMessage::updateOrCreate(
             [
                 'ticket_id' => $ticket->id,
-                'user_id' => $admin->id,
-                'message' => 'Halo Bli Made, betul sekali. Di bagian slot kartu kedua ada KTP dan kartu identitas saya.',
+                'user_id' => $andi->id,
+                'message' => 'Halo Citra, betul sekali! Di bagian slot kartu kedua ada KTP dan kartu mahasiswa atas nama Andi Pratama.',
             ]
         );
 
-        \App\Models\TicketMessage::updateOrCreate(
+        TicketMessage::updateOrCreate(
             [
                 'ticket_id' => $ticket->id,
-                'user_id' => $finder->id,
-                'message' => 'Cocok dan terkonfirmasi! Silakan verifikasi tiket klaim ini melalui tombol sistem agar bisa saya serahkan langsung.',
+                'user_id' => $citra->id,
+                'message' => 'Data cocok dan tiket sudah di-approve Admin! Nanti saat bertemu silakan tunjukkan QR Code untuk verifikasi serah terima.',
             ]
         );
 
-        // 5. Barang Tambahan di sekitar Singaraja
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Kunci Motor Honda Vario Smartkey'],
+        // ========================================================
+        // 4. Ulasan Komunitas (AppReview) untuk Testimoni Landing Page
+        // ========================================================
+        AppReview::updateOrCreate(
+            ['comment' => 'Sistem pencocokan AI NODUS sangat akurat! Dompet saya yang hilang di Singaraja bisa terlacak dan terverifikasi secara aman.'],
             [
-                'user_id' => $admin->id,
-                'type' => 'lost',
-                'description' => 'Kunci remote smartkey Honda Vario dengan gantungan boneka biru, terjatuh di area parkiran pantai.',
-                'category' => 'Kunci & Kendaraan',
-                'latitude' => -8.1065,
-                'longitude' => 115.0682,
-                'location_name' => 'Pantai Penimbangan, Singaraja',
-                'item_date' => now()->subDays(2)->format('Y-m-d'),
-                'status' => 'searching',
-                'ai_tags' => ['kunci', 'smartkey', 'vario', 'gantungan biru'],
-            ]
-        );
-
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Tumbler Stainless Corkcicle Mint'],
-            [
-                'user_id' => $finder->id,
-                'type' => 'found',
-                'description' => 'Tertinggal di meja kantin barat Kampus Tengah Undiksha, kondisi mulus warna mint.',
-                'category' => 'Barang Pribadi',
-                'latitude' => -8.1182,
-                'longitude' => 115.0931,
-                'location_name' => 'Kampus Tengah Undiksha',
-                'item_date' => now()->subDay()->format('Y-m-d'),
-                'status' => 'searching',
-                'ai_tags' => ['tumbler', 'corkcicle', 'mint', 'stainless'],
-            ]
-        );
-
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'iPhone 13 Midnight Case Silikon'],
-            [
-                'user_id' => $admin->id,
-                'type' => 'lost',
-                'description' => 'iPhone 13 warna midnight dengan casing silikon gelap, hilang saat berfoto di jembatan pelabuhan tua.',
-                'category' => 'Elektronik & Gadget',
-                'latitude' => -8.1042,
-                'longitude' => 115.0912,
-                'location_name' => 'Eks Pelabuhan Buleleng',
-                'item_date' => now()->format('Y-m-d'),
-                'status' => 'searching',
-                'ai_tags' => ['iphone', 'midnight', 'silikon', 'smartphone'],
-            ]
-        );
-
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Tas Ransel Eiger 25L Abu-abu'],
-            [
-                'user_id' => $finder->id,
-                'type' => 'found',
-                'description' => 'Tas ransel Eiger warna abu-abu gelap ditemukan di ruang baca lantai 2 perpustakaan.',
-                'category' => 'Dompet & Tas',
-                'latitude' => -8.1165,
-                'longitude' => 115.0895,
-                'location_name' => 'Perpustakaan Daerah Buleleng',
-                'item_date' => now()->format('Y-m-d'),
-                'status' => 'searching',
-                'ai_tags' => ['tas', 'ransel', 'eiger', 'abu-abu'],
-            ]
-        );
-
-        // 6. Resolved Items (Riwayat Sukses dengan Foto Asli)
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Dompet Lipat Kulit Fossil Original'],
-            [
-                'user_id' => $admin->id,
-                'type' => 'lost',
-                'description' => 'Dompet kulit cokelat tua dengan kartu identitas berhasil dikembalikan kepada pemilik.',
-                'category' => 'Dompet & Tas',
-                'latitude' => -8.1120,
-                'longitude' => 115.0880,
-                'location_name' => 'Taman Kota Singaraja',
-                'item_date' => now()->subDays(5)->format('Y-m-d'),
-                'status' => 'resolved',
-                'image_path' => 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80',
-                'ai_tags' => ['dompet', 'kulit', 'fossil'],
-            ]
-        );
-
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Kunci Motor Honda Vario 160 Smartkey'],
-            [
-                'user_id' => $finder->id,
-                'type' => 'found',
-                'description' => 'Kunci motor ditemukan di area Pantai Penimbangan dan telah diserahterimakan melalui verifikasi QR.',
-                'category' => 'Kunci & Kendaraan',
-                'latitude' => -8.1065,
-                'longitude' => 115.0682,
-                'location_name' => 'Pantai Penimbangan',
-                'item_date' => now()->subDays(4)->format('Y-m-d'),
-                'status' => 'resolved',
-                'image_path' => 'https://images.unsplash.com/photo-1589134763158-7c8a6fcf7c61?auto=format&fit=crop&w=600&q=80',
-                'ai_tags' => ['kunci', 'vario', 'smartkey'],
-            ]
-        );
-
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Smartphone Samsung Galaxy A54 5G'],
-            [
-                'user_id' => $admin->id,
-                'type' => 'lost',
-                'description' => 'Smartphone warna putih casing bening tertinggal di lab komputer dan berhasil dikembalikan.',
-                'category' => 'Elektronik & Gadget',
-                'latitude' => -8.1150,
-                'longitude' => 115.0910,
-                'location_name' => 'Perpustakaan Daerah Singaraja',
-                'item_date' => now()->subDays(3)->format('Y-m-d'),
-                'status' => 'resolved',
-                'image_path' => 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80',
-                'ai_tags' => ['smartphone', 'samsung', 'galaxy'],
-            ]
-        );
-
-        \App\Models\Item::updateOrCreate(
-            ['title' => 'Tas Ransel Laptop Eiger Black Series'],
-            [
-                'user_id' => $finder->id,
-                'type' => 'found',
-                'description' => 'Tas laptop berisi berkas kuliah berhasil diserahkan ke pemiliknya.',
-                'category' => 'Dompet & Tas',
-                'latitude' => -8.1170,
-                'longitude' => 115.0890,
-                'location_name' => 'Gedung Kuliah Bersama',
-                'item_date' => now()->subDays(2)->format('Y-m-d'),
-                'status' => 'resolved',
-                'image_path' => 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80',
-                'ai_tags' => ['tas', 'ransel', 'eiger'],
-            ]
-        );
-
-        // 7. Seed Featured Reviews (Hanya bintang 4 dan 5 yang di-featured)
-        \App\Models\AppReview::updateOrCreate(
-            ['comment' => 'Dompet saya yang jatuh di Pantai Penimbangan kembali hanya dalam waktu 3 jam berkat pencocokan AI Nodus. Luar biasa aman dan terpercaya!'],
-            [
-                'user_id' => $admin->id,
+                'user_id' => $budi->id,
                 'rating' => 5,
                 'is_featured' => true,
             ]
         );
 
-        \App\Models\AppReview::updateOrCreate(
-            ['comment' => 'Fitur chat terenkripsi dan verifikasi kepemilikan sangat membantu. Saya tidak perlu khawatir nomor pribadi tersebar saat mengembalikan tas.'],
+        AppReview::updateOrCreate(
+            ['comment' => 'Fitur Secure Claim Ticket dan verifikasi QR melindungi privasi pelapor dan penemu. Sangat direkomendasikan untuk kampus!'],
             [
-                'user_id' => $finder->id,
+                'user_id' => $andi->id,
                 'rating' => 5,
                 'is_featured' => true,
-            ]
-        );
-
-        \App\Models\AppReview::updateOrCreate(
-            ['comment' => 'Sistem reputasi dinamis membuat orang terdorong untuk jujur. Senang sekali kunci motor saya bisa ketemu dengan cepat!'],
-            [
-                'user_id' => $admin->id,
-                'rating' => 4,
-                'is_featured' => true,
-            ]
-        );
-
-        \App\Models\AppReview::updateOrCreate(
-            ['comment' => 'Antarmuka aplikasi sangat ramah pengguna dan verifikasi QR kodenya canggih banget.'],
-            [
-                'user_id' => $finder->id,
-                'rating' => 5,
-                'is_featured' => true,
-            ]
-        );
-
-        // Ulasan rating rendah (bintang 2) sebagai masukan internal admin (TIDAK BOLEH tampil di landing page)
-        \App\Models\AppReview::updateOrCreate(
-            ['comment' => 'Kadang notifikasinya agak lambat masuk, mohon ditingkatkan kecepatan server ke depannya.'],
-            [
-                'user_id' => $finder->id,
-                'rating' => 2,
-                'is_featured' => false,
             ]
         );
     }

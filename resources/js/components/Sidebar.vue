@@ -4,9 +4,7 @@
       <!-- Logo NODUS -->
       <div class="flex items-center justify-between">
         <router-link to="/" class="flex items-center gap-2.5 group">
-          <div class="w-9 h-9 rounded-2xl bg-brand-teal/10 flex items-center justify-center">
-            <span class="w-3.5 h-3.5 rounded-full bg-brand-teal"></span>
-          </div>
+          <LogoN class="w-8 h-8" />
           <span class="text-2xl font-bold tracking-wider text-navy-900 group-hover:text-brand-teal transition-colors">
             NODUS
           </span>
@@ -108,6 +106,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/store/appStore';
 import ReviewModal from '@/components/ReviewModal.vue';
+import LogoN from '@/components/LogoN.vue';
 
 const store = useAppStore();
 const router = useRouter();

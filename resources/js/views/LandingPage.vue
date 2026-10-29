@@ -657,10 +657,8 @@
         <div class="flex flex-col md:flex-row items-center justify-between gap-8 pb-8 border-b border-slate-800">
           <!-- Logo & Deskripsi -->
           <div class="space-y-3 text-center md:text-left">
-            <div class="flex items-center justify-center md:justify-start gap-2">
-              <div class="w-7 h-7 rounded-full bg-brand-teal/20 flex items-center justify-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-brand-teal"></span>
-              </div>
+            <div class="flex items-center justify-center md:justify-start gap-2.5">
+              <LogoN class="w-7 h-7" />
               <span class="text-xl font-bold tracking-wider text-white">NODUS</span>
             </div>
             <p class="text-xs text-slate-400 max-w-sm">
@@ -699,6 +697,7 @@ import axios from 'axios';
 import { useAppStore } from '@/store/appStore';
 import Navbar from '@/components/Navbar.vue';
 import AuthModal from '@/components/AuthModal.vue';
+import LogoN from '@/components/LogoN.vue';
 
 const route = useRoute();
 const router = useRouter();

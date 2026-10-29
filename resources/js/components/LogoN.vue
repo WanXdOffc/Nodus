@@ -1,0 +1,72 @@
+<template>
+  <svg
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    class="inline-block transition-transform duration-300 group-hover:scale-105 flex-shrink-0"
+  >
+    <defs>
+      <!-- Gradient Diagonal Network Connection (Teal to Orange) -->
+      <linearGradient id="nodusDiagGrad" x1="13" y1="13" x2="35" y2="35" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#14B8A6" />
+        <stop offset="100%" stop-color="#F97316" />
+      </linearGradient>
+
+      <!-- Soft Shadow for Network Nodes -->
+      <filter id="nodusNodeShadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#0F172A" flood-opacity="0.18" />
+      </filter>
+    </defs>
+
+    <!-- Lingkaran Luar Radar Jaringan (Lost & Found Geolocation Network) -->
+    <circle cx="24" cy="24" r="21" stroke="#14B8A6" stroke-opacity="0.12" stroke-width="1.5" stroke-dasharray="3 3" />
+
+    <!-- Garis Batang Kiri (Teal) -->
+    <path
+      d="M13 13V35"
+      stroke="#14B8A6"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+
+    <!-- Garis Diagonal Penghubung Jaringan 'N' -->
+    <path
+      d="M13 13L35 35"
+      stroke="url(#nodusDiagGrad)"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+
+    <!-- Garis Batang Kanan (Orange) -->
+    <path
+      d="M35 35V13"
+      stroke="#F97316"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+
+    <!-- Node 1: Kiri Atas (Titik Lapor Kehilangan) -->
+    <circle cx="13" cy="13" r="4.5" fill="#14B8A6" filter="url(#nodusNodeShadow)" />
+    <circle cx="13" cy="13" r="2" fill="#FFFFFF" />
+
+    <!-- Node 2: Kiri Bawah (Titik Radius Temuan) -->
+    <circle cx="13" cy="35" r="4.5" fill="#14B8A6" filter="url(#nodusNodeShadow)" />
+    <circle cx="13" cy="35" r="2" fill="#FFFFFF" />
+
+    <!-- Node 3: Kanan Bawah (Titik Handshake QR & Resolusi) -->
+    <circle cx="35" cy="35" r="4.5" fill="#F97316" filter="url(#nodusNodeShadow)" />
+    <circle cx="35" cy="35" r="2" fill="#FFFFFF" />
+
+    <!-- Node 4: Kanan Atas (Titik Trust & Verifikasi) -->
+    <circle cx="35" cy="13" r="4.5" fill="#F97316" filter="url(#nodusNodeShadow)" />
+    <circle cx="35" cy="13" r="2" fill="#FFFFFF" />
+
+    <!-- Matchpoint Tengah (AI Intelligence Node) -->
+    <circle cx="24" cy="24" r="2.8" fill="#F97316" />
+    <circle cx="24" cy="24" r="1.2" fill="#FFFFFF" />
+  </svg>
+</template>
+
+<script setup>
+// Komponen Logo Visual N Kapital dengan filosofi Jaringan (Network Node)
+</script>

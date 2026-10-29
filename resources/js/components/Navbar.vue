@@ -3,10 +3,8 @@
     <div class="max-w-6xl mx-auto">
       <nav class="bg-white/95 backdrop-blur-md border border-slate-100 rounded-full px-5 sm:px-8 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.06)] flex items-center justify-between transition-all duration-300">
         <!-- Logo Kiri -->
-        <a href="#" class="flex items-center gap-2 group">
-          <div class="w-8 h-8 rounded-full bg-brand-teal/10 flex items-center justify-center">
-            <span class="w-3 h-3 rounded-full bg-brand-teal"></span>
-          </div>
+        <a href="#" class="flex items-center gap-2.5 group">
+          <LogoN class="w-8 h-8" />
           <span class="text-xl sm:text-2xl font-bold tracking-wider text-navy-900 group-hover:text-brand-teal transition-colors">
             NODUS
           </span>
@@ -149,6 +147,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useAppStore } from '@/store/appStore';
+import LogoN from '@/components/LogoN.vue';
 
 defineEmits(['open-login']);
 const store = useAppStore();

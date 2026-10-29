@@ -143,7 +143,8 @@ class DeveloperPortalTest extends TestCase
             ]);
 
         $data = $response->json('data');
-        $this->assertCount(2, $data);
+        // Total 3 item aktif (2 resolved + 1 searching, exclude expired_charity)
+        $this->assertCount(3, $data);
 
         // Pastikan tidak ada data sensitif seperti user_id, email, phone, dll.
         foreach ($data as $item) {
@@ -152,13 +153,20 @@ class DeveloperPortalTest extends TestCase
             $this->assertArrayNotHasKey('email', $item);
             $this->assertArrayNotHasKey('latitude', $item);
             $this->assertArrayNotHasKey('longitude', $item);
-            $this->assertEquals('resolved', $item['status']);
         }
 
-        // Pastikan barang searching tidak ada dalam respon
-        $response->assertJsonMissing(['title' => 'Laptop Asus ROG Rahasia']);
+        // Pastikan expired charity tidak ada dalam respon
+        $response->assertJsonMissing(['title' => 'Tumbler Minum Biru']);
         $response->assertJsonMissing(['personal_secret_a@campus.edu']);
         $response->assertJsonMissing(['personal_secret_b@campus.edu']);
+
+        // Uji filter khusus status=resolved
+        $resolvedOnly = $this->getJson('/api/public/items?status=resolved');
+        $resolvedOnly->assertStatus(200);
+        $this->assertCount(2, $resolvedOnly->json('data'));
+        foreach ($resolvedOnly->json('data') as $resolvedItem) {
+            $this->assertEquals('resolved', $resolvedItem['status']);
+        }
 
         // Verifikasi agregat statistik
         $this->assertEquals(2, $response->json('statistics.total_resolved'));
