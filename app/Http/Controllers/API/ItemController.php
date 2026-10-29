@@ -65,6 +65,10 @@ class ItemController extends Controller
 
         $items = $query->paginate($request->query('per_page', 15));
 
+        $items->getCollection()->transform(function (Item $item) {
+            return $this->obfuscateCoordinates($item);
+        });
+
         return response()->json($items);
     }
 
@@ -73,9 +77,35 @@ class ItemController extends Controller
      */
     public function show(Item $item): JsonResponse
     {
+        $item->load('user:id,name,trust_score');
+
         return response()->json([
-            'item' => $item->load('user:id,name,trust_score'),
+            'item' => $this->obfuscateCoordinates($item),
         ]);
+    }
+
+    /**
+     * Menambahkan noise acak (+/- 0.002 derajat atau sekitar 150-250m) untuk menyamarkan koordinat asli publik.
+     */
+    private function obfuscateCoordinates(Item $item): Item
+    {
+        if ($item->latitude !== null && $item->longitude !== null) {
+            // Generate noise acak antara -0.00200 dan +0.00200 derajat
+            $latNoise = mt_rand(-200, 200) / 100000;
+            $lngNoise = mt_rand(-200, 200) / 100000;
+
+            if (abs($latNoise) < 0.0005) {
+                $latNoise = 0.0015;
+            }
+            if (abs($lngNoise) < 0.0005) {
+                $lngNoise = -0.0015;
+            }
+
+            $item->latitude = round((float) $item->latitude + $latNoise, 6);
+            $item->longitude = round((float) $item->longitude + $lngNoise, 6);
+        }
+
+        return $item;
     }
 
     /**
