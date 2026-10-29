@@ -102,8 +102,21 @@
       <!-- Chat Thread Sederhana -->
       <div class="space-y-3 pt-2 border-t border-slate-100">
         <div class="flex items-center justify-between text-xs font-bold text-navy-900">
-          <span>Pesan Klaim &amp; Bukti</span>
-          <span class="text-[10px] font-normal text-slate-400">Terenkripsi</span>
+          <div class="flex items-center gap-1.5">
+            <span>Pesan Klaim &amp; Bukti</span>
+            <span class="text-[10px] font-normal text-slate-400">Terenkripsi</span>
+          </div>
+          <!-- Tombol Report Fraud (Anti-ID-Hafal) -->
+          <button
+            type="button"
+            @click="reportModalOpen = true"
+            class="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <span>Report Fraud</span>
+          </button>
         </div>
 
         <!-- Chat Bubble List -->
@@ -176,12 +189,19 @@
         <span>Reject Match</span>
       </button>
     </div>
+
+    <!-- Modal Report User / Fraud (Anti-ID-Hafal) -->
+    <ReportUserModal
+      v-model="reportModalOpen"
+      :target-user="counterpartUser"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
 import { useAppStore } from '@/store/appStore';
+import ReportUserModal from '@/components/ReportUserModal.vue';
 
 const props = defineProps({
   ticket: {
@@ -196,10 +216,22 @@ const store = useAppStore();
 const newMessage = ref('');
 const sending = ref(false);
 const actionLoading = ref(false);
+const reportModalOpen = ref(false);
 
 const currentUserId = computed(() => store.user?.id);
 const messages = computed(() => store.ticketMessages);
 const messagesLoading = computed(() => store.messagesLoading);
+
+// Otomatis tentukan pihak lawan bicara (counterpart)
+const counterpartUser = computed(() => {
+  if (!props.ticket) return null;
+  if (props.ticket.counterpart_user) return props.ticket.counterpart_user;
+  const currentId = store.user?.id;
+  if (props.ticket.lost_item?.user_id === currentId) {
+    return props.ticket.found_item?.user;
+  }
+  return props.ticket.lost_item?.user;
+});
 
 async function handleSendMessage() {
   if (!newMessage.value.trim() || sending.value) return;

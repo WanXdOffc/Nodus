@@ -14,6 +14,7 @@ class UserReport extends Model
         'reporter_id',
         'reported_user_id',
         'reason',
+        'evidence_image_path',
         'status',
     ];
 

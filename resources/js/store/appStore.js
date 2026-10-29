@@ -253,16 +253,51 @@ export const useAppStore = defineStore('app', {
       }
     },
 
-    async submitUserReport(reportedUserId, reason) {
+    async createItem(formData) {
       try {
-        const res = await axios.post('/api/user-reports', {
-          reported_user_id: reportedUserId,
-          reason,
+        const res = await axios.post('/api/items', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         });
-        this.notify('Laporan berhasil dikirim ke tim admin.', 'success');
+        this.notify('Laporan barang berhasil dibuat & diproses oleh AI Nodus!', 'success');
+        await this.fetchItems();
         return res.data;
       } catch (err) {
-        this.notify('Gagal mengirim laporan pengguna.', 'error');
+        const msg = err.response?.data?.message || 'Gagal membuat laporan barang.';
+        this.notify(msg, 'error');
+        throw err;
+      }
+    },
+
+    async submitUserReport(payload) {
+      try {
+        let body = payload;
+        let config = {};
+
+        if (payload instanceof FormData) {
+          body = payload;
+          config = { headers: { 'Content-Type': 'multipart/form-data' } };
+        } else if (payload && typeof payload === 'object') {
+          const fd = new FormData();
+          fd.append('reported_user_id', payload.reported_user_id);
+          fd.append('reason', payload.reason || '');
+          if (payload.reason_category) {
+            fd.append('reason_category', payload.reason_category);
+          }
+          if (payload.evidence_image instanceof File) {
+            fd.append('evidence_image', payload.evidence_image);
+          }
+          body = fd;
+          config = { headers: { 'Content-Type': 'multipart/form-data' } };
+        }
+
+        const res = await axios.post('/api/user-reports', body, config);
+        this.notify('Laporan beserta bukti berhasil dikirim ke tim moderator.', 'success');
+        return res.data;
+      } catch (err) {
+        const msg = err.response?.data?.message || 'Gagal mengirim laporan pengguna.';
+        this.notify(msg, 'error');
         throw err;
       }
     },

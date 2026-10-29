@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('reporter_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('reported_user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('reason');
+            $table->text('reason');
+            $table->string('evidence_image_path')->nullable();
             $table->enum('status', ['pending', 'reviewed'])->default('pending');
             $table->timestamps();
         });
