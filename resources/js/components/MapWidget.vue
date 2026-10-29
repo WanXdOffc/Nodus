@@ -52,31 +52,44 @@ onMounted(() => {
     zoomControl: false,
   });
 
-  // Modern Tileset: CartoDB Positron (Clean, sleek, and high contrast)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+  // Tile layer dari OpenStreetMap (Aman, stabil, dan tanpa batasan API key)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd',
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    attribution: '&copy; OpenStreetMap contributors',
   }).addTo(mapInstance);
 
   // Zoom control diposisikan di kanan atas
   L.control.zoom({ position: 'topright' }).addTo(mapInstance);
 
-  // Radius terpusat di Singaraja (Area Radar Nodus)
+  // Radius terpusat di Singaraja (Radar Modern Teal Dashed)
   radiusCircle = L.circle(SINGARAJA_COORDS, {
-    color: '#00C2A8',
-    fillColor: '#00C2A8',
-    fillOpacity: 0.08,
+    color: '#14B8A6',
+    fillColor: '#14B8A6',
+    fillOpacity: 0.05,
     weight: 2,
-    dashArray: '4, 6',
+    dashArray: '6, 8',
     radius: 3500, // 3.5 km radius
   }).addTo(mapInstance);
 
   markersLayer = L.layerGroup().addTo(mapInstance);
   renderMarkers();
+
+  // Pastikan Leaflet menghitung dimensi kontainer secara akurat
+  setTimeout(() => {
+    mapInstance?.invalidateSize();
+  }, 250);
+
+  window.addEventListener('resize', handleResize);
 });
 
+function handleResize() {
+  if (mapInstance) {
+    mapInstance.invalidateSize();
+  }
+}
+
 onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
   if (mapInstance) {
     mapInstance.remove();
     mapInstance = null;

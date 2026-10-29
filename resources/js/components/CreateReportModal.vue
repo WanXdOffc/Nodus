@@ -261,10 +261,9 @@ function initMiniMap() {
     zoomControl: false,
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    subdomains: 'abcd',
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    attribution: '&copy; OpenStreetMap contributors',
   }).addTo(miniMap);
 
   L.control.zoom({ position: 'topright' }).addTo(miniMap);
@@ -276,6 +275,10 @@ function initMiniMap() {
     form.value.longitude = e.latlng.lng;
     updateMarker(e.latlng.lat, e.latlng.lng);
   });
+
+  setTimeout(() => {
+    miniMap?.invalidateSize();
+  }, 200);
 }
 
 function updateMarker(lat, lng) {
