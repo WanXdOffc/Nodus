@@ -57,10 +57,6 @@ class ProcessAiMatchmaking implements ShouldQueue
 
         $prompt = "Ekstrak kata kunci utama dari judul dan deskripsi barang ini dalam format JSON array (contoh: ['dompet', 'kulit', 'hitam', 'fossil']). Hanya berikan output JSON array tanpa penjelasan lainnya. Judul: {$item->title}, Deskripsi: {$item->description}";
 
-        // Model tercepat dengan latensi rendah untuk AI Vision & text understanding
-        $model = 'gemini-1.5-flash';
-        $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-
         $parts = [
             ['text' => $prompt],
         ];
@@ -81,37 +77,51 @@ class ProcessAiMatchmaking implements ShouldQueue
             }
         }
 
-        try {
-            $response = Http::timeout(15)->post($endpoint, [
-                'contents' => [
-                    [
-                        'parts' => $parts,
+        // Urutan model tercepat dengan dukungan AI Vision & ketersediaan tinggi
+        $primaryModel = config('services.gemini.model') ?? env('GEMINI_MODEL') ?? 'gemini-3.5-flash-lite';
+        $candidateModels = array_values(array_unique([
+            $primaryModel,
+            'gemini-3.5-flash-lite',
+            'gemini-flash-lite-latest',
+            'gemini-3.1-flash-lite',
+            'gemini-3.6-flash',
+        ]));
+
+        foreach ($candidateModels as $model) {
+            $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+
+            try {
+                $response = Http::timeout(12)->post($endpoint, [
+                    'contents' => [
+                        [
+                            'parts' => $parts,
+                        ],
                     ],
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.2,
-                ],
-            ]);
+                    'generationConfig' => [
+                        'temperature' => 0.2,
+                    ],
+                ]);
 
-            if ($response->successful()) {
-                $rawText = $response->json('candidates.0.content.parts.0.text');
+                if ($response->successful()) {
+                    $rawText = $response->json('candidates.0.content.parts.0.text');
 
-                if ($rawText) {
-                    $cleanJson = preg_replace('/```(?:json)?\s*(.*?)\s*```/s', '$1', trim($rawText));
-                    $decoded = json_decode($cleanJson, true);
+                    if ($rawText) {
+                        $cleanJson = preg_replace('/```(?:json)?\s*(.*?)\s*```/s', '$1', trim($rawText));
+                        $decoded = json_decode($cleanJson, true);
 
-                    if (is_array($decoded)) {
-                        $tags = array_values(array_unique(array_filter(array_map('strtolower', array_map('trim', $decoded)))));
-                        if (! empty($tags)) {
-                            return $tags;
+                        if (is_array($decoded)) {
+                            $tags = array_values(array_unique(array_filter(array_map('strtolower', array_map('trim', $decoded)))));
+                            if (! empty($tags)) {
+                                return $tags;
+                            }
                         }
                     }
+                } else {
+                    Log::warning("Gemini {$model} returned error status: " . $response->status() . " Body: " . substr($response->body(), 0, 150));
                 }
-            } else {
-                Log::warning("Gemini {$model} returned error status: " . $response->status() . " Body: " . $response->body());
+            } catch (\Throwable $e) {
+                Log::warning("Gemini {$model} request exception: " . $e->getMessage());
             }
-        } catch (\Throwable $e) {
-            Log::warning("Gemini {$model} request exception: " . $e->getMessage());
         }
 
         return $this->fallbackTagExtraction($item->title, $item->description);

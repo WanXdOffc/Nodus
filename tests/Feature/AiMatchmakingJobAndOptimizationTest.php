@@ -85,9 +85,9 @@ class AiMatchmakingJobAndOptimizationTest extends TestCase
             'ai_tags' => null,
         ]);
 
-        // Mock Gemini API menggunakan model gemini-1.5-flash
+        // Mock Gemini API menggunakan model generateContent
         Http::fake([
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent*' => Http::response([
+            'https://generativelanguage.googleapis.com/v1beta/models/*:generateContent*' => Http::response([
                 'candidates' => [
                     [
                         'content' => [

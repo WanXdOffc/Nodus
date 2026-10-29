@@ -36,7 +36,8 @@ class TestAiMatchmaking extends Command
         $this->info("   NODUS AI VISION & MATCHMAKING TEST SCRIPT     ");
         $this->info("=================================================");
         $this->info("Target Uji Coba: {$title}");
-        $this->info("Model AI       : gemini-1.5-flash");
+        $model = config('services.gemini.model', 'gemini-3.5-flash-lite');
+        $this->info("Model AI       : {$model} (Fast Multimodal Vision)");
         $this->info("Membaca API Key: " . (config('services.gemini.api_key') ? 'Tersedia (OK)' : 'Tidak ditemukan'));
 
         // 1. Siapkan dummy image fisik di storage publik
