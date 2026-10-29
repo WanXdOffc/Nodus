@@ -97,6 +97,14 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Relasi ke ulasan aplikasi yang diberikan oleh user ini.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(AppReview::class);
+    }
+
+    /**
      * Cek apakah user memiliki peran admin.
      */
     public function isAdmin(): bool

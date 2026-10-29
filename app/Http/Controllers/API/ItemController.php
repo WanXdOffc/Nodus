@@ -139,6 +139,35 @@ class ItemController extends Controller
     }
 
     /**
+     * Mengambil daftar riwayat barang yang telah berhasil diselesaikan (resolved).
+     */
+    public function resolvedHistory(): JsonResponse
+    {
+        $items = Item::with('user:id,name,trust_score')
+            ->where('status', 'resolved')
+            ->latest('updated_at')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'description' => $item->description,
+                    'category' => $item->category,
+                    'type' => $item->type,
+                    'location_name' => $item->location_name,
+                    'image_path' => $item->image_path,
+                    'item_date' => $item->item_date instanceof \DateTimeInterface ? $item->item_date->format('Y-m-d') : (string) $item->item_date,
+                    'resolved_at' => $item->updated_at?->format('Y-m-d H:i') ?? (string) $item->updated_at,
+                    'resolved_human' => $item->updated_at?->diffForHumans() ?? 'Baru saja',
+                    'user' => $item->user,
+                ];
+            });
+
+        return response()->json($items);
+    }
+
+    /**
      * Memanggil REST API Gemini untuk mengekstrak kata kunci utama menjadi JSON array.
      */
     private function extractAiTags(string $title, string $description): array
