@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LandingPage from '@/views/LandingPage.vue';
 import Dashboard from '@/views/Dashboard.vue';
+import MyReports from '@/views/MyReports.vue';
+import Messages from '@/views/Messages.vue';
 
 const routes = [
     {
@@ -12,6 +14,18 @@ const routes = [
         path: '/dashboard',
         name: 'dashboard',
         component: Dashboard,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/my-reports',
+        name: 'my-reports',
+        component: MyReports,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/messages',
+        name: 'messages',
+        component: Messages,
         meta: { requiresAuth: true },
     },
 ];
