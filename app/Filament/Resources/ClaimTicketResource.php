@@ -50,6 +50,15 @@ class ClaimTicketResource extends Resource
                     ])
                     ->default('open')
                     ->required(),
+                Forms\Components\Select::make('admin_status')
+                    ->label('Status Moderasi Admin')
+                    ->options([
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
+                    ->default('pending')
+                    ->required(),
             ]);
     }
 
@@ -58,18 +67,18 @@ class ClaimTicketResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+                    ->label('ID Tiket')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lostItem.title')
-                    ->label('Barang Hilang')
+                    ->label('Item Hilang')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('foundItem.title')
-                    ->label('Barang Temuan')
+                    ->label('Item Temuan')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('ai_match_score')
-                    ->label('Skor AI (%)')
+                    ->label('ai_match_score')
                     ->badge()
                     ->color(fn (int $state): string => match (true) {
                         $state >= 80 => 'success',
@@ -77,14 +86,25 @@ class ClaimTicketResource extends Resource
                         default => 'danger',
                     })
                     ->sortable(),
+                Tables\Columns\TextColumn::make('admin_status')
+                    ->label('admin_status')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
+                    ->label('Status Tiket')
                     ->badge()
                     ->colors([
                         'warning' => 'open',
                         'success' => 'verified',
                         'danger' => 'rejected',
                     ])
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
@@ -92,6 +112,13 @@ class ClaimTicketResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('admin_status')
+                    ->label('Status Moderasi Admin')
+                    ->options([
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ]),
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'open' => 'Open',
@@ -100,6 +127,24 @@ class ClaimTicketResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (ClaimTicket $record): bool => $record->admin_status === 'pending')
+                    ->requiresConfirmation()
+                    ->action(function (ClaimTicket $record): void {
+                        $record->update(['admin_status' => 'approved']);
+                    }),
+                Tables\Actions\Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (ClaimTicket $record): bool => $record->admin_status !== 'rejected')
+                    ->requiresConfirmation()
+                    ->action(function (ClaimTicket $record): void {
+                        $record->update(['admin_status' => 'rejected']);
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
