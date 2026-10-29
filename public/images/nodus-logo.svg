@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 140" width="100%" height="100%">
+  <defs>
+    <linearGradient id="nodusDiag" x1="45" y1="35" x2="95" y2="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#14B8A6" />
+      <stop offset="100%" stop-color="#F97316" />
+    </linearGradient>
+    <filter id="nodeShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Radar Outer Ring -->
+  <circle cx="70" cy="65" r="50" stroke="#14B8A6" stroke-opacity="0.18" stroke-width="2" stroke-dasharray="4 4" fill="none" />
+  
+  <!-- Left Stem -->
+  <path d="M45 40V90" stroke="#14B8A6" stroke-width="7" stroke-linecap="round" />
+  
+  <!-- Network Diagonal -->
+  <path d="M45 40L95 90" stroke="url(#nodusDiag)" stroke-width="7" stroke-linecap="round" />
+  
+  <!-- Right Stem -->
+  <path d="M95 90V40" stroke="#F97316" stroke-width="7" stroke-linecap="round" />
+  
+  <!-- Node Circles -->
+  <circle cx="45" cy="40" r="9" fill="#14B8A6" filter="url(#nodeShadow)" />
+  <circle cx="45" cy="40" r="4" fill="#FFFFFF" />
+  
+  <circle cx="45" cy="90" r="9" fill="#14B8A6" filter="url(#nodeShadow)" />
+  <circle cx="45" cy="90" r="4" fill="#FFFFFF" />
+  
+  <circle cx="95" cy="90" r="9" fill="#F97316" filter="url(#nodeShadow)" />
+  <circle cx="95" cy="90" r="4" fill="#FFFFFF" />
+  
+  <circle cx="95" cy="40" r="9" fill="#F97316" filter="url(#nodeShadow)" />
+  <circle cx="95" cy="40" r="4" fill="#FFFFFF" />
+  
+  <!-- AI Central Intersection Point -->
+  <circle cx="70" cy="65" r="5.5" fill="#F97316" />
+  <circle cx="70" cy="65" r="2.5" fill="#FFFFFF" />
+
+  <!-- Typography -->
+  <text x="145" y="76" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="52" font-weight="900" letter-spacing="4" fill="#0F172A">
+    NOD<tspan fill="#14B8A6">U</tspan><tspan fill="#F97316">S</tspan>
+  </text>
+  <text x="148" y="102" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="3" fill="#64748B">
+    LOST &amp; FOUND INTELLIGENCE NETWORK
+  </text>
+</svg>
