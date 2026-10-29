@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'role',
         'trust_score',
+        'is_banned',
     ];
 
     /**
@@ -51,6 +52,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'trust_score' => 'float',
+            'is_banned' => 'boolean',
         ];
     }
 
@@ -59,7 +61,7 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' && ! $this->is_banned;
     }
 
     /**

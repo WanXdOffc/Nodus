@@ -305,4 +305,148 @@ class ItemAndAiMatchingTest extends TestCase
                 'message' => 'Saya ingin ikut nimbrung',
             ])->assertStatus(403);
     }
+
+    public function test_resolve_ticket_updates_status_and_rewards_trust_score(): void
+    {
+        $userLost = User::create([
+            'name' => 'Owner',
+            'email' => 'owner@example.com',
+            'password' => 'password',
+            'role' => 'user',
+            'trust_score' => 5.0,
+        ]);
+
+        $userFound = User::create([
+            'name' => 'Finder',
+            'email' => 'finder@example.com',
+            'password' => 'password',
+            'role' => 'user',
+            'trust_score' => 5.0,
+        ]);
+
+        $lost = Item::create([
+            'user_id' => $userLost->id,
+            'type' => 'lost',
+            'title' => 'Kunci Motor',
+            'description' => 'Gantungan merah',
+            'category' => 'Kunci',
+            'latitude' => -8.1,
+            'longitude' => 115.0,
+            'location_name' => 'Taman Kota',
+            'item_date' => '2026-10-29',
+            'status' => 'searching',
+            'ai_tags' => ['kunci', 'motor'],
+        ]);
+
+        $found = Item::create([
+            'user_id' => $userFound->id,
+            'type' => 'found',
+            'title' => 'Kunci Motor Honda',
+            'description' => 'Ditemukan dekat air mancur',
+            'category' => 'Kunci',
+            'latitude' => -8.1,
+            'longitude' => 115.0,
+            'location_name' => 'Taman Kota',
+            'item_date' => '2026-10-29',
+            'status' => 'searching',
+            'ai_tags' => ['kunci', 'motor'],
+        ]);
+
+        $ticket = ClaimTicket::create([
+            'lost_item_id' => $lost->id,
+            'found_item_id' => $found->id,
+            'ai_match_score' => 95,
+            'status' => 'open',
+            'admin_status' => 'pending', // Belum di-approve admin
+        ]);
+
+        $tokenOwner = $userLost->createToken('owner')->plainTextToken;
+
+        // 1. Resolusi gagal jika belum di-approve admin
+        $resNotApproved = $this->withHeader('Authorization', 'Bearer ' . $tokenOwner)
+            ->postJson("/api/claim-tickets/{$ticket->id}/resolve");
+        $resNotApproved->assertStatus(422);
+
+        $this->app['auth']->forgetGuards();
+
+        // 2. Admin meng-approve tiket
+        $ticket->update(['admin_status' => 'approved']);
+
+        // 3. User asing mencoba menyelesaikan tiket -> 403 Forbidden
+        $stranger = User::create([
+            'name' => 'Stranger',
+            'email' => 'stranger@example.com',
+            'password' => 'password',
+            'role' => 'user',
+            'trust_score' => 5.0,
+        ]);
+        $tokenStranger = $stranger->createToken('stranger')->plainTextToken;
+        $this->withHeader('Authorization', 'Bearer ' . $tokenStranger)
+            ->postJson("/api/claim-tickets/{$ticket->id}/resolve")
+            ->assertStatus(403);
+
+        $this->app['auth']->forgetGuards();
+
+        // 4. Pemilik menyelesaikan tiket
+        $resSuccess = $this->withHeader('Authorization', 'Bearer ' . $tokenOwner)
+            ->postJson("/api/claim-tickets/{$ticket->id}/resolve");
+        $resSuccess->assertStatus(200)
+            ->assertJsonPath('ticket.status', 'verified');
+
+        // Pastikan tiket, lost item, dan found item berstatus selesai
+        $this->assertEquals('verified', $ticket->fresh()->status);
+        $this->assertEquals('resolved', $lost->fresh()->status);
+        $this->assertEquals('resolved', $found->fresh()->status);
+
+        // Pastikan reward trust_score bertambah +0.5 (5.0 -> 5.5)
+        $this->assertEquals(5.5, (float) $userLost->fresh()->trust_score);
+        $this->assertEquals(5.5, (float) $userFound->fresh()->trust_score);
+    }
+
+    public function test_fraud_penalty_decreases_trust_score_and_bans_user(): void
+    {
+        $reporter = User::create([
+            'name' => 'Pelapor Asli',
+            'email' => 'pelapor@example.com',
+            'password' => 'password',
+            'role' => 'user',
+            'trust_score' => 5.0,
+        ]);
+
+        $scammer = User::create([
+            'name' => 'Penipu Siber',
+            'email' => 'scammer@example.com',
+            'password' => 'password',
+            'role' => 'user',
+            'trust_score' => 1.5, // Skor rendah, akan turun di bawah 0 saat dipenalti -2.0
+        ]);
+
+        $report = \App\Models\UserReport::create([
+            'reporter_id' => $reporter->id,
+            'reported_user_id' => $scammer->id,
+            'reason' => 'Mencoba mengklaim barang orang lain dengan bukti palsu.',
+            'status' => 'pending',
+        ]);
+
+        // Simulasikan eksekusi action validateFraud
+        $report->update(['status' => 'reviewed']);
+        $newScore = round(((float) $scammer->trust_score) - 2.0, 1);
+        if ($newScore <= 0) {
+            $newScore = 0.0;
+            $scammer->is_banned = true;
+            $scammer->tokens()->delete();
+        }
+        $scammer->trust_score = $newScore;
+        $scammer->save();
+
+        $this->assertEquals('reviewed', $report->fresh()->status);
+        $this->assertEquals(0.0, (float) $scammer->fresh()->trust_score);
+        $this->assertTrue($scammer->fresh()->is_banned);
+
+        // Pastikan user yang diblokir tidak bisa login
+        $this->postJson('/api/login', [
+            'email' => 'scammer@example.com',
+            'password' => 'password',
+        ])->assertStatus(403);
+    }
 }

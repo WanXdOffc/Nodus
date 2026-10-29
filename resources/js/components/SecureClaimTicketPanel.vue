@@ -171,7 +171,7 @@
     <!-- Action Area (Bawah) -->
     <div class="p-5 border-t border-slate-200/80 bg-slate-50/50 space-y-2.5 flex-shrink-0">
       <button
-        @click="handleAction('verified')"
+        @click="handleVerifyOwnership"
         :disabled="actionLoading || ticket?.status === 'verified'"
         class="w-full py-3 px-4 bg-brand-orange hover:bg-[#e85b27] disabled:opacity-50 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
       >
@@ -243,6 +243,18 @@ async function handleSendMessage() {
     // error handled in store
   } finally {
     sending.value = false;
+  }
+}
+
+async function handleVerifyOwnership() {
+  if (actionLoading.value || !props.ticket) return;
+  actionLoading.value = true;
+  try {
+    await store.resolveClaimTicket(props.ticket.id);
+  } catch (err) {
+    // handled in store
+  } finally {
+    actionLoading.value = false;
   }
 }
 

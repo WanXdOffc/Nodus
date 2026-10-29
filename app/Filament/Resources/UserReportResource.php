@@ -87,6 +87,40 @@ class UserReportResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('validateFraud')
+                    ->label('Validasi Laporan (Penipuan)')
+                    ->icon('heroicon-o-shield-exclamation')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Validasi Laporan Penipuan')
+                    ->modalDescription('Tindakan ini akan menandai laporan sebagai reviewed dan mengurangi Trust Score pengguna yang dilaporkan sebesar -2.0. Jika skor mencapai 0 atau kurang, akun akan otomatis diblokir.')
+                    ->visible(fn (UserReport $record): bool => $record->status === 'pending')
+                    ->action(function (UserReport $record): void {
+                        $record->update(['status' => 'reviewed']);
+
+                        $reportedUser = $record->reportedUser;
+                        if ($reportedUser) {
+                            $currentScore = (float) $reportedUser->trust_score;
+                            $newScore = round($currentScore - 2.0, 1);
+                            $isBanned = false;
+
+                            if ($newScore <= 0) {
+                                $newScore = 0.0;
+                                $isBanned = true;
+                                $reportedUser->is_banned = true;
+                                $reportedUser->tokens()->delete();
+                            }
+
+                            $reportedUser->trust_score = $newScore;
+                            $reportedUser->save();
+
+                            Notification::make()
+                                ->title('Laporan Penipuan Divalidasi')
+                                ->body("Trust score {$reportedUser->name} dikurangi menjadi {$newScore}" . ($isBanned ? " dan akun telah otomatis diblokir." : "."))
+                                ->warning()
+                                ->send();
+                        }
+                    }),
                 Tables\Actions\Action::make('markAsReviewed')
                     ->label('Tandai Reviewed')
                     ->icon('heroicon-o-check-circle')

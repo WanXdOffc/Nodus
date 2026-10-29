@@ -253,6 +253,30 @@ export const useAppStore = defineStore('app', {
       }
     },
 
+    async resolveClaimTicket(ticketId) {
+      const id = ticketId || this.activeTicket?.id;
+      if (!id) return;
+      try {
+        const res = await axios.post(`/api/claim-tickets/${id}/resolve`);
+        if (this.activeTicket && this.activeTicket.id === id) {
+          this.activeTicket.status = 'verified';
+        }
+        const foundTicket = this.tickets.find((t) => t.id === id);
+        if (foundTicket) {
+          foundTicket.status = 'verified';
+        }
+
+        this.notify(res.data.message || 'Klaim Berhasil! Trust Score Anda meningkat.', 'success');
+        await this.fetchCurrentUser();
+        await this.fetchItems();
+        return res.data;
+      } catch (err) {
+        const errorMsg = err.response?.data?.message || 'Gagal memverifikasi dan menyelesaikan klaim.';
+        this.notify(errorMsg, 'error');
+        throw err;
+      }
+    },
+
     async createItem(formData) {
       try {
         const res = await axios.post('/api/items', formData, {
