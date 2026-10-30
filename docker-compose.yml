@@ -1,5 +1,4 @@
 services:
-  # Service 1: Web Server (Laravel 11 + Vue 3 SPA + Nginx)
   web:
     build:
       context: .
@@ -16,8 +15,9 @@ services:
     env_file:
       - path: .env
         required: false
+    networks:
+      - coolify # TAMBAHKAN INI
 
-  # Service 2: Background Queue Worker (AI Matchmaking Gemini)
   queue-worker:
     build:
       context: .
@@ -34,7 +34,14 @@ services:
     env_file:
       - path: .env
         required: false
+    networks:
+      - coolify # TAMBAHKAN INI
 
 volumes:
   nodus-storage:
     driver: local
+
+# TAMBAHKAN BLOK INI DI PALING BAWAH
+networks:
+  coolify:
+    external: true
