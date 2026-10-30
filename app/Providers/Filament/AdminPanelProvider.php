@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\ItemsChart;
+use App\Filament\Widgets\StatsOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -28,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->homeUrl('/')
+            ->favicon(asset('favicon.svg'))
             ->brandLogo(fn () => view('filament.brand'))
             ->colors([
                 'primary' => Color::Amber,
@@ -39,8 +42,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                \App\Filament\Widgets\StatsOverview::class,
-                \App\Filament\Widgets\ItemsChart::class,
+                StatsOverview::class,
+                ItemsChart::class,
                 Widgets\AccountWidget::class,
             ])
             ->middleware([

@@ -325,7 +325,8 @@
             <div>
               <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4">
                 <img
-                  src="https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80"
+                  src="/images/dompet-kulit.jpg"
+                  @error="$event.target.src = 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80'"
                   alt="Dompet Kulit Pria"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -345,7 +346,8 @@
             <div>
               <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4">
                 <img
-                  src="https://images.unsplash.com/photo-1589134763158-7c8a6fcf7c61?auto=format&fit=crop&w=600&q=80"
+                  src="/images/kunci-smartkey.jpg"
+                  @error="$event.target.src = 'https://images.unsplash.com/photo-1666346166849-8443c47f50fa?auto=format&fit=crop&w=600&q=80'"
                   alt="Kunci Motor Smartkey"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -365,7 +367,8 @@
             <div>
               <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100 mb-4">
                 <img
-                  src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80"
+                  src="/images/smartphone-android.jpg"
+                  @error="$event.target.src = 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80'"
                   alt="Smartphone Android"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
