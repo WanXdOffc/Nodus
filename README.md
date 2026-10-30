@@ -326,6 +326,42 @@ Untuk memverifikasi koneksi Gemini AI secara instan melalui CLI tanpa frontend:
 php artisan nodus:test-ai --clean
 ```
 
+### Cara Menjalankan via Docker 
+
+Untuk kemudahan pengujian tanpa perlu mengonfigurasi PHP, Composer, Node.js, atau web server manual di mesin host, NODUS menyediakan orkestrasi container berbasis `Dockerfile` multi-stage dan `docker-compose.yml`.
+
+#### 1. Persiapan File Environment
+Salin template konfigurasi dan sesuaikan kredensial basis data serta API Key Google Gemini:
+```bash
+cp .env.example .env
+```
+Pastikan variabel `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`, dan `GEMINI_API_KEY` terisi dengan konfigurasi MySQL Anda.
+
+#### 2. Build & Jalankan Kontainer
+Eksekusi orkestrasi kontainer di background:
+```bash
+docker-compose up -d --build
+```
+Perintah ini akan mengorkestrasi 2 service utama secara otomatis:
+* **`web`**: Menjalankan build frontend Vue 3 secara *production-ready* via Stage 1 (Node 20), mengonfigurasi server Nginx + PHP 8.3 (`webdevops/php-nginx:8.3-alpine`), dan melayani HTTP traffic di port `8000` (`http://localhost:8000`).
+* **`queue-worker`**: Menjalankan worker `php artisan queue:work --sleep=3 --tries=3` secara independen untuk memproses antrean AI Matchmaking (Gemini Vision) di latar belakang.
+
+#### 3. Inisialisasi Database Kontainer
+Setelah kontainer aktif, jalankan migrasi database, seeding skenario terverifikasi, dan storage symlink melalui service `web`:
+```bash
+docker-compose exec web php artisan key:generate --force
+docker-compose exec web php artisan migrate:fresh --seed
+docker-compose exec web php artisan storage:link
+```
+
+#### 4. Menghentikan Kontainer
+```bash
+docker-compose down
+```
+
+> **Deployment Produksi (Coolify / Docker-based PaaS):**
+> Untuk deployment pada platform PaaS seperti Coolify, sistem menggunakan integrasi "GitHub Repository" yang otomatis mendeteksi dan mengeksekusi `docker-compose.yml`. Anda hanya perlu menyediakan repositori Git dan mengonfigurasi Environment Variables database MySQL eksternal yang valid serta `GEMINI_API_KEY`. Worker AI (`queue-worker`) beserta HTTP Web Server (`web`) akan otomatis terdistribusi, aktif, dan berjalan tanpa konfigurasi server manual tambahan.
+
 ---
 
 ## 6. Panduan Deployment Server Produksi
@@ -418,6 +454,13 @@ Tambahkan entri crontab sistem untuk mengeksekusi pemeriksaan kedaluwarsa barang
 ```bash
 * * * * * cd /var/www/nodus && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+### 6.5 Deployment via Coolify (PaaS)
+Untuk deployment produksi menggunakan Coolify:
+1. Buat **New Resource** -> Pilih **Public Repository** atau **Private Repository** (GitHub).
+2. Tentukan branch target. Coolify akan mendeteksi `docker-compose.yml` secara otomatis.
+3. Pada tab **Environment Variables**, masukkan konfigurasi basis data eksternal (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`) dan `GEMINI_API_KEY`.
+4. Jalankan deployment. Service `web` (HTTP Traffic Nginx) dan `queue-worker` (AI Matchmaking Background Daemon) akan langsung dibangun dan berjalan secara terisolasi.
 
 ---
 

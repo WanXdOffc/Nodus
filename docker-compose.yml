@@ -1,0 +1,43 @@
+services:
+  # Service 1: Web Server (Laravel 11 + Vue 3 SPA + Nginx)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    expose:
+      - 80
+    environment:
+      - WEB_DOCUMENT_ROOT=/app/public
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+    volumes:
+      - nodus-storage:/app/storage/app/public
+    env_file:
+      - path: .env
+        required: false
+
+  # Service 2: Background Queue Worker (AI Matchmaking Gemini)
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3
+    depends_on:
+      - web
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_DEBUG=${APP_DEBUG:-false}
+    volumes:
+      - nodus-storage:/app/storage/app/public
+    env_file:
+      - path: .env
+        required: false
+
+volumes:
+  nodus-storage:
+    driver: local
+
