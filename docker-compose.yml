@@ -5,28 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8000}:80"
     expose:
       - 80
     environment:
       - WEB_DOCUMENT_ROOT=/app/public
-      - APP_NAME=${APP_NAME:-NODUS}
       - APP_ENV=${APP_ENV:-production}
-      - APP_KEY=${APP_KEY:-base64:NV5rGVyQovmz5aRDaGk3H+hZgJsLka7ElAplL8SRubs=}
       - APP_DEBUG=${APP_DEBUG:-false}
-      - APP_URL=${APP_URL:-http://localhost}
-      - DB_CONNECTION=${DB_CONNECTION:-mysql}
-      - DB_HOST=${DB_HOST:-127.0.0.1}
-      - DB_PORT=${DB_PORT:-3306}
-      - DB_DATABASE=${DB_DATABASE:-nodus}
-      - DB_USERNAME=${DB_USERNAME:-root}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - SESSION_DRIVER=${SESSION_DRIVER:-database}
-      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
-      - CACHE_STORE=${CACHE_STORE:-database}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash-lite}
     volumes:
       - nodus-storage:/app/storage/app/public
     env_file:
@@ -43,21 +27,8 @@ services:
     depends_on:
       - web
     environment:
-      - APP_NAME=${APP_NAME:-NODUS}
       - APP_ENV=${APP_ENV:-production}
-      - APP_KEY=${APP_KEY:-base64:NV5rGVyQovmz5aRDaGk3H+hZgJsLka7ElAplL8SRubs=}
       - APP_DEBUG=${APP_DEBUG:-false}
-      - DB_CONNECTION=${DB_CONNECTION:-mysql}
-      - DB_HOST=${DB_HOST:-127.0.0.1}
-      - DB_PORT=${DB_PORT:-3306}
-      - DB_DATABASE=${DB_DATABASE:-nodus}
-      - DB_USERNAME=${DB_USERNAME:-root}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - SESSION_DRIVER=${SESSION_DRIVER:-database}
-      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
-      - CACHE_STORE=${CACHE_STORE:-database}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash-lite}
     volumes:
       - nodus-storage:/app/storage/app/public
     env_file:
