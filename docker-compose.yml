@@ -5,8 +5,6 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8000}:80"
     expose:
       - 80
     environment:
@@ -40,4 +38,3 @@ services:
 volumes:
   nodus-storage:
     driver: local
-
